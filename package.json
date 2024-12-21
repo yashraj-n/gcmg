@@ -10,6 +10,7 @@
     "git-commit-msg-generate": "dist/index.js",
     "gcmg": "dist/index.js"
   },
+  "repository": "https://github.com/yashraj-n/gcmg/",
   "type": "commonjs",
   "peerDependencies": {
     "typescript": "^5.0.0"
