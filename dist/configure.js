@@ -22,7 +22,7 @@ function configure() {
         const { provider } = yield enquirer_1.default.prompt({
             type: 'select',
             name: 'provider',
-            message: 'Please Choose AI Provider:', // Add a message property
+            message: 'Please Choose AI Provider:',
             choices: Object.keys(providers_1.default)
         });
         const { model, apiKey } = yield enquirer_1.default.prompt([{
