@@ -1,0 +1,31 @@
+{
+  "name": "gcmg",
+  "author": "Yashraj Narke",
+  "version": "1.0.0",
+  "description": "A tool to generate commit messages for git",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "git-cmg": "dist/index.js",
+    "git-commit-msg-generate": "dist/index.js",
+    "gcmg": "dist/index.js"
+  },
+  "type": "commonjs",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.5",
+    "@ai-sdk/google": "^1.0.11",
+    "@ai-sdk/google-vertex": "^2.0.10",
+    "@ai-sdk/groq": "^1.0.8",
+    "@ai-sdk/openai": "^1.0.10",
+    "@types/node": "^22.10.2",
+    "ai": "^4.0.20",
+    "args-parser": "^1.3.0",
+    "enquirer": "^2.4.1",
+    "typescript": "^5.7.2",
+    "zod": "^3.24.1"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
