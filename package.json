@@ -11,7 +11,7 @@
     "gcmg": "dist/index.js"
   },
   "scripts": {
-    "build": "bun src/scripts/generate-models.ts && node esbuild.config.js"
+    "build": "tsx src/scripts/generate-models.ts && node esbuild.config.js"
   },
   "repository": "https://github.com/yashraj-n/gcmg/",
   "type": "commonjs",
