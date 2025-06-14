@@ -95,7 +95,7 @@ export async function generateCommitMessage(): Promise<void> {
     console.log();
     console.log(chalk.bold(result));
 
-    const escapedCommitMsg = shellQuote.quote([result]);
+    const escapedCommitMsg = shellQuote.quote([result]).slice(1, -1); // Remove quotes
     await addAndCommit(escapedCommitMsg);
     await pushChanges();
   } catch (error) {
