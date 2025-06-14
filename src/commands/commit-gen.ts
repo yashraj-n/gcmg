@@ -19,6 +19,9 @@ const getDiff = (): string => {
 
 const executeGitCommand = (command: string): void => {
   try {
+    const c = "git " + command;
+    console.log(c);
+    return
     execSync("git " + command, { stdio: "inherit" });
   } catch (error) {
     throw new Error(`Git command failed: ${error}`);
@@ -42,7 +45,7 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
 
   try {
     executeGitCommand("add .");
-    executeGitCommand(`commit -m "${commitMessage}`);
+    executeGitCommand(`commit -m ${commitMessage}`);
     console.log("✅ Changes committed successfully");
   } catch (error) {
     console.error("❌ Failed to commit changes:", error);
