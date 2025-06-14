@@ -55,7 +55,7 @@ const pushChanges = async (): Promise<void> => {
   if (!shouldPush) return;
 
   try {
-    executeGitCommand("git push");
+    executeGitCommand("push");
     console.log("✅ Changes pushed successfully");
   } catch (error) {
     console.error("❌ Failed to push changes:", error);
