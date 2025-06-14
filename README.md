@@ -1,129 +1,259 @@
-# Git Commit Message Generator
+<div align="center">
 
-A command-line tool that uses AI to automatically generate meaningful and well-formatted Git commit messages based on your code changes. It supports multiple AI providers including OpenAI, Anthropic, Google, Groq, and Perplexity.
+# 🚀 GCMG - Git Commit Message Generator
 
-## Features
+[![npm version](https://badge.fury.io/js/gcmg.svg)](https://badge.fury.io/js/gcmg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
 
-- Automatic commit message generation based on git diff
-- Support for multiple AI providers:
-    - OpenAI (GPT-4 and variants)
-    - Anthropic (Claude models)
-    - Google Generative AI (Gemini models)
-    - Google Vertex AI
-    - Groq (LLaMA and Mixtral models)
-    - Perplexity (Sonar models)
-- Interactive configuration setup
-- Standardized commit message format
-- Optional automatic git add, commit, and push operations
-- Cross-platform support (Windows, macOS, Linux)
+**🤖 Intelligent AI-powered commit message generation for developers who value quality and consistency**
 
-## Installation
+*Transform your git workflow with smart, standardized commit messages generated from your actual code changes*
 
+![Demo](./assets/demo.gif)
+
+</div>
+
+---
+
+## ✨ Features
+
+🎯 **Smart Commit Generation** - Analyzes your `git diff` to create meaningful, descriptive commit messages  
+🤖 **Multi-AI Provider Support** - Choose from OpenAI, Anthropic, Google, Groq, and more  
+⚡ **Lightning Fast** - Built with esbuild for optimal performance  
+🔧 **Interactive Setup** - Guided configuration with beautiful CLI prompts  
+📝 **Standardized Format** - Consistent commit message structure across your projects  
+🌍 **Cross-Platform** - Works seamlessly on Windows, macOS, and Linux  
+🔄 **Auto Git Operations** - Optional automatic add, commit, and push workflow  
+💬 **AI Query Mode** - Ask questions about git commands and get instant help  
+
+## 🎨 What Makes GCMG Special?
+
+### 🧠 **Intelligent Analysis**
+- Reads your actual code changes via `git diff`
+- Understands context and generates relevant commit messages
+- Handles large diffs intelligently (with smart 10k character limit)
+
+### 🎭 **Multiple AI Personalities**
+Choose from the industry's best AI models:
+
+| Provider | Models Available | Strengths |
+|----------|-----------------|-----------|
+| **OpenAI** | GPT-4, GPT-4o, o1, o3-mini | Most versatile, excellent reasoning |
+| **Anthropic** | Claude-4, Claude-3.5 Sonnet/Haiku | Superior code understanding |
+| **Google** | Gemini 2.0, Gemini 1.5 Pro/Flash | Fast and efficient |
+| **Groq** | Llama 3.3, Mixtral, Qwen | Lightning-fast inference |
+| **Google Vertex** | Enterprise Gemini models | Enterprise-grade reliability |
+
+### 🎯 **Perfect Commit Format**
+Every generated message follows this proven structure:
+```
+[feat] Add user authentication system
+- Implement JWT token-based authentication
+- Add login and logout endpoints
+- Create user session management
+- Add password encryption with bcrypt
+... Enhances application security and user management
+```
+
+## 🚀 Quick Start
+
+### Installation
 ```bash
 npm install -g gcmg
 ```
 
-## Command Aliases
-
-The tool can be invoked using any of these commands:
-```bash
-gcmg                     # Short alias
-git-cmg                  # Git-style alias
-git-commit-msg-generate  # Full name
-```
-
-All commands work exactly the same way - use whichever you prefer!
-
-## Setup
-
-1. Run the configuration command (using any of the aliases):
+### Setup (One-time)
 ```bash
 gcmg config
-# or
-git-cmg config
-# or
-git-commit-msg-generate config
 ```
+Follow the interactive prompts to:
+1. 🎯 Select your preferred AI provider
+2. 🤖 Choose an AI model
+3. 🔑 Enter your API key
 
-2. Follow the interactive prompts to:
-    - Select your preferred AI provider
-    - Choose an AI model
-    - Enter your API key
-
-The configuration will be saved in:
-- Windows: `%APPDATA%\Git Commit Message Generator\config.json`
-- macOS: `~/Library/Application Support/Git Commit Message Generator/config.json`
-- Linux: `~/.config/Git Commit Message Generator/config.json`
-
-## Usage
-
-1. Make changes to your code
-2. Run the generator using any of the aliases:
+### Usage
 ```bash
+# Make your changes
+git add .
+
+# Generate and commit
 gcmg
+
+# Or ask for help
+gcmg "how do I remove sensitive data from git history?"
 ```
 
-3. The tool will:
-    - Get the current git diff
-    - Generate a commit message using the configured AI provider
-    - Show you the generated message
-    - Ask if you want to commit the changes
-    - Optionally push the changes to remote
+## 🎪 Command Showcase
 
-## Commit Message Format
+GCMG provides multiple command aliases for maximum convenience:
 
-Generated commit messages follow this format:
-```
-[<type>] <Title>
-- Detail 1
-- Detail 2
-- Detail 3
-- Detail 4
-... <Conclusion>
+```bash
+gcmg                           # 🚀 Primary command
+git-cmg                        # 🔧 Git-style alias  
+git-commit-msg-generate        # 📝 Descriptive alias
 ```
 
-Where `<type>` can be:
-- feat: New feature
-- fix: Bug fix
-- docs: Documentation changes
-- style: Code style changes
-- refactor: Code refactoring
-- test: Adding tests
-- chore: Maintenance tasks
+### 🎨 Available Commands
 
-## Requirements
+| Command | Description | Example |
+|---------|-------------|---------|
+| `gcmg` | 🎯 Generate commit message from changes | `gcmg` |
+| `gcmg config` | ⚙️ Interactive configuration setup | `gcmg config` |
+| `gcmg edit` | ✏️ Edit configuration file | `gcmg edit` |
+| `gcmg help` | 📚 Show beautiful help message | `gcmg help` |
+| `gcmg <query>` | 💬 Ask git-related questions | `gcmg "revert last commit"` |
 
-- Node.js 14 or higher
-- Git installed and configured
-- API key for your chosen AI provider
+## 🛠️ Configuration
 
-## Dependencies
+Configuration is stored securely in platform-appropriate locations:
 
-- Enquirer: Interactive CLI prompts
-- Zod: Runtime type checking
-- args-parser: Command line argument parsing
-- Various AI provider SDKs (@ai-sdk/*)
+- **Windows:** `%APPDATA%\gcmg\.gcmg-config`
+- **macOS:** `~/Library/Application Support/gcmg/.gcmg-config`
+- **Linux:** `~/.config/gcmg/.gcmg-config`
 
-## Error Handling
+### 🔧 Configuration Structure
+```json
+{
+  "name": "OpenAI",
+  "provider": "@ai-sdk/openai",
+  "model": "gpt-4o",
+  "apiKey": "your-api-key",
+  "prompts": {
+    "commit": "Your custom commit prompt...",
+    "help": "Your custom help prompt..."
+  }
+}
+```
 
-The tool includes comprehensive error handling for:
-- Git command failures
-- AI provider initialization issues
-- Configuration loading problems
-- Network connectivity issues
+## 🎭 Advanced Features
 
-## Contributing
+### 🤖 **AI Query Mode**
+Get instant help with git commands:
+```bash
+gcmg "how to merge branches safely"
+gcmg "undo last commit but keep changes"
+gcmg "remove file from git history"
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes using the tool itself! (`gcmg`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### ⚡ **Smart Diff Handling**
+- Automatically detects when no changes exist
+- Warns about large diffs (>10k characters)
+- Handles binary files and complex changes intelligently
 
-## License
+### 🔄 **Streamlined Workflow**
+1. **Analyze** - Reads your git diff
+2. **Generate** - Creates intelligent commit message
+3. **Review** - Shows you the proposed message
+4. **Commit** - Optionally commits with `git add . && git commit`
+5. **Push** - Optionally pushes to remote repository
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🏗️ Architecture
 
-## Support
+GCMG is built with modern development practices:
 
-For issues, questions, or suggestions, please open an issue in the GitHub repository.
+- **TypeScript** - Type-safe development
+- **ESBuild** - Lightning-fast compilation
+- **Vercel AI SDK** - Unified AI provider interface
+- **Enquirer** - Beautiful interactive prompts
+- **Zod** - Runtime type validation
+- **Cross-platform** - Works everywhere Node.js runs
+
+### 📁 Project Structure
+```
+gcmg/
+├── src/
+│   ├── commands/         # 🎯 CLI command implementations
+│   ├── lib/             # 🔧 Core libraries (config, LLM, models)
+│   ├── scripts/         # 🛠️ Build and utility scripts
+│   └── prompts.ts       # 💬 AI prompt templates
+├── assets/              # 🎨 Visual assets
+└── dist/               # 📦 Built output
+```
+
+## 🎨 Commit Types
+
+GCMG automatically categorizes your changes:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `feat` | ✨ New features | `[feat] Add dark mode toggle` |
+| `fix` | 🐛 Bug fixes | `[fix] Resolve login validation error` |
+| `docs` | 📚 Documentation | `[docs] Update API documentation` |
+| `style` | 💄 Code formatting | `[style] Fix indentation and spacing` |
+| `refactor` | ♻️ Code refactoring | `[refactor] Simplify user service logic` |
+| `test` | 🧪 Testing | `[test] Add unit tests for auth module` |
+| `chore` | 🔧 Maintenance | `[chore] Update dependencies` |
+
+## 🤝 Contributing
+
+We love contributions! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** your feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes using GCMG itself! (`gcmg`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### 🛠️ Development Setup
+```bash
+git clone https://github.com/yashraj-n/gcmg.git
+cd gcmg
+npm install
+npm run build
+```
+
+## 📊 Why Choose GCMG?
+
+### 🎯 **Before GCMG**
+```
+git commit -m "fix stuff"
+git commit -m "update"
+git commit -m "asdfgh"
+```
+
+### ✨ **After GCMG**
+```
+[fix] Resolve authentication middleware validation error
+- Fix JWT token verification logic
+- Add proper error handling for expired tokens
+- Update middleware to handle edge cases
+- Add comprehensive logging for debugging
+... Improves application security and user experience
+```
+
+## 🌟 Real-World Example
+
+```bash
+$ gcmg
+✓ Getting Changes...
+✓ Generating Commit Message...
+
+[feat] Implement user profile management system
+- Add user profile CRUD operations
+- Create profile update validation
+- Implement avatar upload functionality
+- Add email verification for profile changes
+- Create comprehensive user settings page
+... Enhances user experience with complete profile control
+
+? Do you want to add and commit these changes? › Yes
+✓ Changes committed successfully
+? Do you want to push the changes? › Yes
+✓ Changes pushed successfully
+👋 Goodbye!
+```
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+<div align="center">
+
+**⭐ Star this repo if GCMG helps improve your git workflow! ⭐**
+
+[🐛 Report Bug](https://github.com/yashraj-n/gcmg/issues) · [✨ Request Feature](https://github.com/yashraj-n/gcmg/issues) · [💬 Discussions](https://github.com/yashraj-n/gcmg/discussions)
+
+Made with 💻 and ☕ for developers who care about quality commits
+
+</div>

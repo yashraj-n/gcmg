@@ -173,3 +173,5 @@ yarn.lock
 
 # Finder (MacOS) folder config
 .DS_Store
+
+dist
