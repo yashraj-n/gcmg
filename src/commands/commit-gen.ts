@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { exec, execSync } from "node:child_process";
 import Enquirer from "enquirer";
 import { LLmManager } from "@/lib/llm";
 import chalk from "chalk";
@@ -7,6 +7,7 @@ import yoctoSpinner from "yocto-spinner";
 
 const getDiff = (): string => {
   try {
+    execSync("git add . -N"); // Add all files to the index so that newly created files are added to the diff
     return execSync("git --no-pager diff", {
       encoding: "utf8",
       // Ignore warnings
