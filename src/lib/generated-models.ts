@@ -1,4 +1,4 @@
-// Auto generated via generate-models.ts at 2025-07-20T14:19:38.072Z
+// Auto generated via generate-models.ts at 2025-07-20T14:23:25.109Z
 export const providers = {
       "OpenAI": {
         "id": "openai",
