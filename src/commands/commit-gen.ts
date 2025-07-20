@@ -4,6 +4,9 @@ import { LLmManager } from "@/lib/llm";
 import chalk from "chalk";
 import shellQuote from "shell-quote";
 import yoctoSpinner from "yocto-spinner";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
 
 const getDiff = (): string => {
   try {
@@ -41,11 +44,16 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
   );
   if (!shouldProceed) return process.exit(0);
 
+  const tmpDir = os.tmpdir();
+  const tmpFile = path.join(tmpDir, `gcmg-commit-msg-${Date.now()}.txt`);
   try {
+    await fs.writeFile(tmpFile, commitMessage, { encoding: "utf8" });
     executeGitCommand("add .");
-    executeGitCommand(`commit -m "${commitMessage}`);
+    executeGitCommand(`commit -F "${tmpFile}"`);
+    await fs.unlink(tmpFile);
     console.log("✅ Changes committed successfully");
   } catch (error) {
+    try { await fs.unlink(tmpFile); } catch {}
     console.error("❌ Failed to commit changes:", error);
     throw error;
   }

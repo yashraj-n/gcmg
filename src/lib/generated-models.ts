@@ -1,4 +1,4 @@
-// Auto generated via E:\Projects\gcmg\src\scripts\generate-models.ts at 2025-06-14T16:00:43.110Z
+// Auto generated via generate-models.ts at 2025-07-20T14:19:38.072Z
 export const providers = {
       "OpenAI": {
         "id": "openai",

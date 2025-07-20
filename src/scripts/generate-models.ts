@@ -10,7 +10,7 @@ const project = new Project();
 const outputFilePath = path.join("src", "lib", "generated-models.ts");
 const outputFile = project.createSourceFile(
   outputFilePath,
-  `// Auto generated via ${__filename} at ${new Date().toISOString()}`,
+  `// Auto generated via generate-models.ts at ${new Date().toISOString()}`,
   {
     overwrite: true,
   }
