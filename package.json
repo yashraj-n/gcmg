@@ -1,7 +1,7 @@
 {
   "name": "gcmg",
   "author": "Yashraj Narke",
-  "version": "2.0.3Bump package version to 2.0.3",
+  "version": "2.0.3",
   "description": "A tool to generate commit messages and commands for git",
   "license": "MIT",
   "main": "dist/index.js",
