@@ -1,20 +1,14 @@
-// Auto generated via generate-models.ts at 2025-07-20T14:23:25.109Z
+// Auto generated via generate-models.ts at 2025-08-15T06:02:31.553Z
 export const providers = {
       "OpenAI": {
         "id": "openai",
         "models": [
           "o1",
           "o1-2024-12-17",
-          "o1-mini",
-          "o1-mini-2024-09-12",
-          "o1-preview",
-          "o1-preview-2024-09-12",
           "o3-mini",
           "o3-mini-2025-01-31",
           "o3",
           "o3-2025-04-16",
-          "o4-mini",
-          "o4-mini-2025-04-16",
           "gpt-4.1",
           "gpt-4.1-2025-04-14",
           "gpt-4.1-mini",
@@ -25,20 +19,10 @@ export const providers = {
           "gpt-4o-2024-05-13",
           "gpt-4o-2024-08-06",
           "gpt-4o-2024-11-20",
-          "gpt-4o-audio-preview",
-          "gpt-4o-audio-preview-2024-10-01",
-          "gpt-4o-audio-preview-2024-12-17",
-          "gpt-4o-search-preview",
-          "gpt-4o-search-preview-2025-03-11",
-          "gpt-4o-mini-search-preview",
-          "gpt-4o-mini-search-preview-2025-03-11",
           "gpt-4o-mini",
           "gpt-4o-mini-2024-07-18",
           "gpt-4-turbo",
           "gpt-4-turbo-2024-04-09",
-          "gpt-4-turbo-preview",
-          "gpt-4-0125-preview",
-          "gpt-4-1106-preview",
           "gpt-4",
           "gpt-4-0613",
           "gpt-4.5-preview",
@@ -46,15 +30,22 @@ export const providers = {
           "gpt-3.5-turbo-0125",
           "gpt-3.5-turbo",
           "gpt-3.5-turbo-1106",
-          "chatgpt-4o-latest"
+          "chatgpt-4o-latest",
+          "gpt-5",
+          "gpt-5-2025-08-07",
+          "gpt-5-mini",
+          "gpt-5-mini-2025-08-07",
+          "gpt-5-nano",
+          "gpt-5-nano-2025-08-07",
+          "gpt-5-chat-latest"
         ],
         "provider": "@ai-sdk/openai"
       },
       "Anthropic": {
         "id": "anthropic",
         "models": [
-          "claude-4-opus-20250514",
-          "claude-4-sonnet-20250514",
+          "claude-opus-4-20250514",
+          "claude-sonnet-4-20250514",
           "claude-3-7-sonnet-20250219",
           "claude-3-5-sonnet-latest",
           "claude-3-5-sonnet-20241022",
@@ -93,18 +84,26 @@ export const providers = {
         "id": "groq",
         "models": [
           "gemma2-9b-it",
-          "llama-3.3-70b-versatile",
           "llama-3.1-8b-instant",
+          "llama-3.3-70b-versatile",
+          "meta-llama/llama-guard-4-12b",
+          "openai/gpt-oss-120b",
+          "openai/gpt-oss-20b",
+          "deepseek-r1-distill-llama-70b",
+          "meta-llama/llama-4-maverick-17b-128e-instruct",
+          "meta-llama/llama-4-scout-17b-16e-instruct",
+          "meta-llama/llama-prompt-guard-2-22m",
+          "meta-llama/llama-prompt-guard-2-86m",
+          "mistral-saba-24b",
+          "moonshotai/kimi-k2-instruct",
+          "qwen/qwen3-32b",
           "llama-guard-3-8b",
           "llama3-70b-8192",
           "llama3-8b-8192",
           "mixtral-8x7b-32768",
-          "meta-llama/llama-4-scout-17b-16e-instruct",
           "qwen-qwq-32b",
-          "mistral-saba-24b",
           "qwen-2.5-32b",
-          "deepseek-r1-distill-qwen-32b",
-          "deepseek-r1-distill-llama-70b"
+          "deepseek-r1-distill-qwen-32b"
         ],
         "provider": "@ai-sdk/groq"
       },
@@ -129,12 +128,14 @@ export const providers = {
           "gemini-2.0-pro-exp-02-05",
           "gemini-2.0-flash-thinking-exp-01-21",
           "gemini-2.0-flash-exp",
+          "gemini-2.5-pro",
+          "gemini-2.5-flash",
+          "gemini-2.5-flash-lite",
           "gemini-2.5-pro-exp-03-25",
-          "gemini-2.5-pro-preview-05-06",
           "gemini-2.5-flash-preview-04-17",
           "gemini-exp-1206",
-          "gemma-3-27b-it",
-          "learnlm-1.5-pro-experimental"
+          "gemma-3-12b-it",
+          "gemma-3-27b-it"
         ],
         "provider": "@ai-sdk/google"
       }

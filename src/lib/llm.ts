@@ -31,7 +31,7 @@ export class LLmManager {
       await generateText({
         model: llm,
         prompt: ".",
-        maxTokens: 1,
+        maxOutputTokens: 16,
       });
       return true;
     } catch (error) {
