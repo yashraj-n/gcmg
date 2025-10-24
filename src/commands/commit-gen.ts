@@ -44,13 +44,12 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
   );
   if (!shouldProceed) return process.exit(0);
 
-  const tmpDir = os.tmpdir();
-  const tmpFile = path.join(tmpDir, `gcmg-commit-msg-${Date.now()}.txt`);
+  const tmpFile = path.join(process.cwd() ?? "", `gcmg-commit-msg-${Date.now()}.txt`);
   try {
     await fs.writeFile(tmpFile, commitMessage, { encoding: "utf8" });
     executeGitCommand("add .");
     executeGitCommand(`commit -F "${tmpFile}"`);
-    await fs.unlink(tmpFile);
+    // await fs.unlink(tmpFile);
     console.log("✅ Changes committed successfully");
   } catch (error) {
     try { await fs.unlink(tmpFile); } catch {}
