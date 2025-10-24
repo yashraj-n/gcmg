@@ -43,8 +43,8 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
     "Do you want to add and commit these changes?"
   );
   if (!shouldProceed) return process.exit(0);
-
-  const tmpFile = path.join(process.cwd() ?? "", `gcmg-commit-msg-${Date.now()}.txt`);
+  const tmpDir = os.tmpdir() ?? process.cwd();
+  const tmpFile = path.join(tmpDir, `gcmg-commit-msg-${Date.now()}.txt`);
   try {
     await fs.writeFile(tmpFile, commitMessage, { encoding: "utf8" });
     executeGitCommand("add .");
@@ -52,7 +52,9 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
     await fs.unlink(tmpFile);
     console.log("✅ Changes committed successfully");
   } catch (error) {
-    try { await fs.unlink(tmpFile); } catch {}
+    try {
+      await fs.unlink(tmpFile);
+    } catch {}
     console.error("❌ Failed to commit changes:", error);
     throw error;
   }
@@ -87,9 +89,7 @@ export async function generateCommitMessage(): Promise<void> {
       spinner.warning(
         `⚠️ The diff exceeds the soft cap limit (10,000) currenty ${diff.length} characters. This may cause issues with the LLM. Do you want to continue?`
       );
-      const shouldContinue = await confirmAction(
-        "Do you want to continue?"
-      );
+      const shouldContinue = await confirmAction("Do you want to continue?");
       if (!shouldContinue) {
         process.exit(0);
       }
