@@ -49,7 +49,7 @@ const addAndCommit = async (commitMessage: string): Promise<void> => {
     await fs.writeFile(tmpFile, commitMessage, { encoding: "utf8" });
     executeGitCommand("add .");
     executeGitCommand(`commit -F "${tmpFile}"`);
-    // await fs.unlink(tmpFile);
+    await fs.unlink(tmpFile);
     console.log("✅ Changes committed successfully");
   } catch (error) {
     try { await fs.unlink(tmpFile); } catch {}

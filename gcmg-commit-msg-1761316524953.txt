@@ -1,0 +1,42 @@
+[chore] Update dependencies and generated models
+- Updated @ai-sdk/anthropic from 2.0.4 to 2.0.37
+- Updated @ai-sdk/gateway from 1.0.6 to 2.0.1
+- Updated @ai-sdk/google from 2.0.6 to 2.0.23
+- Updated @ai-sdk/google-vertex from 3.0.9 to 3.0.53
+- Updated @ai-sdk/groq from 2.0.9 to 2.0.24
+- Updated @ai-sdk/openai from 2.0.14 to 2.0.53
+- Updated @ai-sdk/provider-utils from 3.0.3 to 3.0.12
+- Updated @esbuild/aix-ppc64 from 0.25.9 to 0.25.11
+- Updated @esbuild/android-arm from 0.25.9 to 0.25.11
+- Updated @esbuild/android-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/android-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/darwin-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/darwin-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/freebsd-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/freebsd-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-arm from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-ia32 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-loong64 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-mips64el from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-ppc64 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-riscv64 from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-s390x from 0.25.9 to 0.25.11
+- Updated @esbuild/linux-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/netbsd-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/netbsd-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/openbsd-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/openbsd-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/openharmony-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/sunos-x64 from 0.25.9 to 0.25.11
+- Updated @esbuild/win32-arm64 from 0.25.9 to 0.25.11
+- Updated @esbuild/win32-ia32 from 0.25.9 to 0.25.11
+- Updated @esbuild/win32-x64 from 0.25.9 to 0.25.11
+- Updated @types/node from 22.17.1 to 22.18.12
+- Updated esbuild from 0.25.9 to 0.25.11
+- Updated tsx from 4.20.4 to 4.20.6
+- Updated typescript from 5.9.2 to 5.9.3
+- Updated chalk from 5.5.0 to 5.6.2
+- Added @vercel/oidc dependency
+- Removed zod-to-json-schema
+- Updated model definitions in src/lib/generated-models.ts [The dependencies and model definitions are updated.]

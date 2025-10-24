@@ -1,4 +1,4 @@
-// Auto generated via generate-models.ts at 2025-10-24T14:33:15.708Z
+// Auto generated via generate-models.ts at 2025-10-24T14:35:05.755Z
 export const providers = {
       "OpenAI": {
         "id": "openai",
@@ -44,17 +44,20 @@ export const providers = {
       "Anthropic": {
         "id": "anthropic",
         "models": [
+          "claude-haiku-4-5",
+          "claude-haiku-4-5-20251001",
+          "claude-sonnet-4-5",
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-1",
+          "claude-opus-4-0",
+          "claude-sonnet-4-0",
+          "claude-opus-4-1-20250805",
           "claude-opus-4-20250514",
           "claude-sonnet-4-20250514",
+          "claude-3-7-sonnet-latest",
           "claude-3-7-sonnet-20250219",
-          "claude-3-5-sonnet-latest",
-          "claude-3-5-sonnet-20241022",
-          "claude-3-5-sonnet-20240620",
           "claude-3-5-haiku-latest",
           "claude-3-5-haiku-20241022",
-          "claude-3-opus-latest",
-          "claude-3-opus-20240229",
-          "claude-3-sonnet-20240229",
           "claude-3-haiku-20240307"
         ],
         "provider": "@ai-sdk/anthropic"
@@ -62,6 +65,11 @@ export const providers = {
       "Google Vertex": {
         "id": "google-vertex",
         "models": [
+          "gemini-2.5-pro",
+          "gemini-2.5-flash",
+          "gemini-2.5-flash-lite",
+          "gemini-2.0-flash-lite",
+          "gemini-2.0-flash",
           "gemini-2.0-flash-001",
           "gemini-1.5-flash",
           "gemini-1.5-flash-001",
@@ -75,6 +83,8 @@ export const providers = {
           "gemini-1.0-pro-001",
           "gemini-1.0-pro-002",
           "gemini-2.0-flash-lite-preview-02-05",
+          "gemini-2.5-flash-lite-preview-09-2025",
+          "gemini-2.5-flash-preview-09-2025",
           "gemini-2.0-pro-exp-02-05",
           "gemini-2.0-flash-exp"
         ],
@@ -94,7 +104,6 @@ export const providers = {
           "meta-llama/llama-4-scout-17b-16e-instruct",
           "meta-llama/llama-prompt-guard-2-22m",
           "meta-llama/llama-prompt-guard-2-86m",
-          "mistral-saba-24b",
           "moonshotai/kimi-k2-instruct",
           "qwen/qwen3-32b",
           "llama-guard-3-8b",
@@ -130,9 +139,12 @@ export const providers = {
           "gemini-2.0-flash-exp",
           "gemini-2.5-pro",
           "gemini-2.5-flash",
+          "gemini-2.5-flash-image-preview",
           "gemini-2.5-flash-lite",
-          "gemini-2.5-pro-exp-03-25",
+          "gemini-2.5-flash-lite-preview-09-2025",
           "gemini-2.5-flash-preview-04-17",
+          "gemini-2.5-flash-preview-09-2025",
+          "gemini-2.5-pro-exp-03-25",
           "gemini-exp-1206",
           "gemma-3-12b-it",
           "gemma-3-27b-it"

@@ -1,5 +1,0 @@
-[Fix] Fix commit message file path and generation timestamp
-- Changed the temporary file path for the commit message from the OS temporary directory to the current working directory.
-- Updated the timestamp in the generated models file to reflect the current date and time.
-- Removed file deletion of tmpFile.
-[Conclusion] This change fixes an issue where the commit message file was not being found in some environments, ensures the models are up-to-date and removes temporary file deletion.
