@@ -1,0 +1,2 @@
+[chore] Bump version to 2.0.4
+- Updated the package version from 2.0.3 to 2.0.4 in package.json.
