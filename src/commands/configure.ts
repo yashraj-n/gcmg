@@ -22,7 +22,7 @@ export async function configure() {
     apiKey: string;
   }>([
     {
-      type: "select",
+      type: "autocomplete",
       name: "model",
       message: "Please Choose Model:",
       choices: providers[name].models.sort((a, b) => a.localeCompare(b)),

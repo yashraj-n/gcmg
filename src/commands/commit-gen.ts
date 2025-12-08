@@ -7,6 +7,9 @@ import yoctoSpinner from "yocto-spinner";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
+import { getRandomJoke } from "@/lib/jokes";
+
+const SOFT_CAP_LIMIT = 50000;
 
 const getDiff = (): string => {
   try {
@@ -85,7 +88,7 @@ export async function generateCommitMessage(): Promise<void> {
       return;
     }
 
-    if (diff.length > 10000) {
+    if (diff.length > SOFT_CAP_LIMIT) {
       spinner.warning(
         `⚠️ The diff exceeds the soft cap limit (10,000) currenty ${diff.length} characters. This may cause issues with the LLM. Do you want to continue?`
       );
@@ -96,7 +99,7 @@ export async function generateCommitMessage(): Promise<void> {
       spinner.start();
     }
 
-    spinner.text = "Generating Commit Message...";
+    spinner.text = getRandomJoke();
     const result = await LLmManager.getInstance().generateCommitMessage(diff);
     spinner.success("Commit Message Generated Successfully");
     spinner.stop();
