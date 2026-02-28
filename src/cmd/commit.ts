@@ -5,7 +5,6 @@ import chalk from "chalk";
 import ora from "ora";
 import simpleGit from "simple-git";
 import prompts from "prompts";
-import boxen from "boxen";
 
 const git = simpleGit();
 

@@ -1,5 +1,6 @@
 import { testProvider } from "@/llm";
-import { PROVIDER_MODELS, PROVIDERS } from "@/llm/provider";
+import { PROVIDER_MODELS } from "@/llm/models";
+import { PROVIDERS } from "@/llm/provider";
 import { Config, saveConfig } from "@/misc/config";
 import ora from "ora";
 import prompts from "prompts";
@@ -43,13 +44,16 @@ export async function setupGcmg() {
   } else {
     const { model } = await prompts([
       {
-        type: "select",
+        type: "autocomplete",
         name: "model",
         message: "Select your preferred model",
-        choices: PROVIDER_MODELS[provider].map((m) => ({
+        choices: PROVIDER_MODELS[provider].map((m: string) => ({
           title: m,
           value: m,
         })),
+        suggest: async (input, choices) => {
+            return choices.filter(c => c.title.toLowerCase().includes(input.toLowerCase()));
+        },
       },
     ]);
     modelId = model;

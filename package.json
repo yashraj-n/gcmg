@@ -12,7 +12,7 @@
     "git-msg": "dist/index.js"
   },
   "scripts": {
-    "build": "tsx src/scripts/generate-models.ts && node esbuild.config.js"
+    "build": "tsx scripts/generate-models.ts && node esbuild.config.js"
   },
   "repository": "https://github.com/yashraj-n/gcmg/",
   "type": "commonjs",
@@ -42,6 +42,7 @@
     "@types/axios": "^0.14.4",
     "@types/node": "^22.19.1",
     "@types/shell-quote": "^1.7.5",
+    "axios": "^1.13.6",
     "esbuild": "^0.25.12",
     "langsmith": "^0.5.7",
     "ts-morph": "^26.0.0",
