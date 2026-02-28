@@ -74,3 +74,6 @@ obsolete now.
 
 Only send the commit message. Do not use markdown. Do not use code blocks. Do not add any other text.
 `;
+
+export const GIT_HELP_PROMPT =
+  "Your job is to help the user with their git commands. Give short answers with Commands. Do not use markdown";

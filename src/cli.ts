@@ -2,6 +2,7 @@ import { program } from "commander";
 import { setupGcmg } from "./cmd/config";
 import { ensureConfig } from "./misc/utils";
 import { generateCommitMessage } from "./cmd/commit";
+import { queryChat } from "./cmd/query-chat";
 
 program
   .name("gcmg")
@@ -20,7 +21,7 @@ program
     ensureConfig(async () => {
       const query = queryParts?.length ? queryParts.join(" ") : undefined;
       if (query) {
-        console.log("Generate commit message based on query:", query);
+       await queryChat(query);
       } else {
         await generateCommitMessage();
       }
@@ -33,14 +34,6 @@ program
   .action(async () => {
     await setupGcmg();
     program.help();
-  });
-
-program
-  .command("edit")
-  .description("Edit configuration (prompts, API keys)")
-  .action(() => {
-    console.log("Opening config editor...");
-    // TODO: implement edit
   });
 
 program
