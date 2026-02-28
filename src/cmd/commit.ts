@@ -36,7 +36,7 @@ export async function generateCommitMessage() {
     );
     spinner.succeed();
 
-    console.log(boxen(chalk.bold(commitMessage), { padding: 1, margin: 1, borderStyle: "round", borderColor: "green" }));
+    console.log("\n" + chalk.bold(commitMessage));
 
     const { confirmAdd } = await prompts([
       {
