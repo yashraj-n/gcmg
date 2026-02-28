@@ -5,6 +5,7 @@ import chalk from "chalk";
 import ora from "ora";
 import simpleGit from "simple-git";
 import prompts from "prompts";
+import boxen from "boxen";
 
 const git = simpleGit();
 
@@ -35,10 +36,8 @@ export async function generateCommitMessage() {
     );
     spinner.succeed();
 
-    console.log("\n");
-    console.log(chalk.bold(commitMessage));
-    console.log("\n");
-    
+    console.log(boxen(chalk.bold(commitMessage), { padding: 1, margin: 1, borderStyle: "round", borderColor: "green" }));
+
     const { confirmAdd } = await prompts([
       {
         type: "confirm",
@@ -51,6 +50,17 @@ export async function generateCommitMessage() {
     if (!confirmAdd) return;
     await git.add(".");
     await git.commit(commitMessage.toString(), ".");
+
+    const { confirmPush } = await prompts([
+      {
+        type: "confirm",
+        initial: true,
+        message: "Do you want to push the changes to the remote repository?",
+        name: "confirmPush",
+      },
+    ]);
+    if (!confirmPush) return;
+    await git.push();
   } catch (error) {
     console.log(
       chalk.red(chalk.bold("Error generating commit message:"), error),
