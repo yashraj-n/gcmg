@@ -2,6 +2,7 @@ import { testProvider } from "@/llm";
 import { PROVIDER_MODELS } from "@/llm/models";
 import { PROVIDERS } from "@/llm/provider";
 import { Config, saveConfig } from "@/misc/config";
+import { handlePromptExit } from "@/misc/utils";
 import ora from "ora";
 import prompts from "prompts";
 
@@ -55,7 +56,9 @@ export async function setupGcmg() {
             return choices.filter(c => c.title.toLowerCase().includes(input.toLowerCase()));
         },
       },
-    ]);
+    ], {
+        onCancel: handlePromptExit,
+    });
     modelId = model;
   }
 

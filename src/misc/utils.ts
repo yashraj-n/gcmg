@@ -96,3 +96,8 @@ const jokes = [
 export const getRandomJoke = () => {
   return jokes[Math.floor(Math.random() * jokes.length)];
 };
+
+export const handlePromptExit = () => {
+  console.log(chalk.red("Exiting..."));
+  process.exit(0);
+};
