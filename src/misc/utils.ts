@@ -1,0 +1,98 @@
+import { setupGcmg } from "@/cmd/config";
+import { getConfig } from "./config";
+import chalk from "chalk";
+
+export async function ensureConfig(callback: () => Promise<void>) {
+  const config = await getConfig();
+  if (!config) {
+    console.log(chalk.red(chalk.bold("No configuration found, setting up...")));
+    await setupGcmg();
+  }
+  await callback();
+}
+const jokes = [
+  "Generating your commit message… please enjoy this joke while I pretend to work harder than you do.",
+  "Still thinking… If this takes too long, feel free to blame latency, AI, your wifi, Mercury in retrograde, or JavaScript. They're all valid.",
+  "Hold on… Currently negotiating with your code. It's resisting.",
+  "Processing… Your commit message is loading. Unlike your tests, it *will* pass.",
+  "Working… This would be faster, but your code started explaining itself. I had to stop it.",
+  "One moment… Git says it refuses to take responsibility for this commit.",
+  "Cooking up brilliance… If your code crashes after this, it's legally not my fault.",
+  "Hang tight… I'm searching deep neural networks for words that won't embarrass Future You.",
+  "Thinking… Your commit message is 90% done. The remaining 10% is emotional damage cleanup.",
+  "Almost there… This commit message will be better than the commit itself. Sorry, I don't make the rules.",
+  "Just a sec… Your code asked for a joke too, but I'm afraid it wouldn't understand it.",
+  "Brewing… This commit message is being handcrafted by unpaid virtual interns.",
+  "Optimizing… I tried to ask your last commit for context, but it ran away screaming.",
+  "Stand by… Your commit message is being assembled by highly trained raccoons.",
+  "Loading creativity… If this message looks smart, remember: you didn't write it.",
+  "Hold tight… Your code is throwing exceptions at me. I'm throwing them back.",
+  "Analyzing… Your commit history is chaotic neutral.",
+  "Please wait… Attempting to make sense of your diffs. Send snacks.",
+  "Thinking hard… Your code said it wanted to remain undocumented. I insisted.",
+  "Loading… Your commit message is stuck in traffic behind a million npm packages.",
+  "Processing… I ran your code in my head. It segfaulted my imagination.",
+  "Calculating… Your codebase asked for a therapist. I referred it to Stack Overflow.",
+  "Summoning creativity… If I generate a great commit message, will you promise not to squash it into 'fix stuff'?",
+  "Preparing brilliance… I've seen cleaner merge conflicts in soap operas.",
+  "Working on it… Your repo whispered: 'please stop pushing directly to main'.",
+  "Generating… If your code were a person, it would definitely ignore the README.",
+  "Recovering… Your tests failed so hard they apologized.",
+  "Waking up… I asked Git for help; it responded with a shrug.",
+  "Crunching bits… Your code is like an onion. Every layer makes me cry.",
+  "Polishing… This commit message will age better than most of your TODOs.",
+  "Translating… Converting your code's screams into professional prose.",
+  "One sec… Your linter is judging this message harder than it judges your code.",
+  "Assembling… This commit message has more layers than your dependency tree.",
+  "Working… I've seen fewer circular references in a daytime drama.",
+  "Generating… Your code has a type. It's 'any'. We're working on it.",
+  "Hold on… Your last commit message was 'fix'. I'm trying to do better.",
+  "Thinking… I asked your code what it does. It said 'stuff'. Very helpful.",
+  "Loading… Your .gitignore and I have something in common: we both pretend node_modules doesn't exist.",
+  "Crafting… This message is being written by the same AI that forgot your password hints.",
+  "Processing… Your codebase has more TODOs than your grocery list.",
+  "Almost ready… Your commit is fighting its past. I'm just the translator.",
+  "Brewing… I found a comment that says 'I have no idea what this does'. Me neither.",
+  "Stand by… Your code requested anonymity. I'm writing the message anyway.",
+  "Calculating… The semantic difference between 'fix' and 'fixes' is being computed.",
+  "Working on it… Your repo has seen things. Terrible things.",
+  "Generating… I'm turning your 'it works on my machine' into something presentable.",
+  "One moment… Your code passed the Turing test by failing to make sense.",
+  "Preparing… This message will explain your changes better than you could.",
+  "Hold tight… Your branch name is a cry for help. I'm ignoring it.",
+  "Thinking hard… I've decoded your variable names. They're all 'temp' and 'data'.",
+  "Loading… Your commit is 90% copy-paste and 10% hope. I'm working with that.",
+  "Optimizing… I tried to find a pattern in your commits. There isn't one.",
+  "Cooking up brilliance… Your code has a story. It's a tragedy, but I'll make it sound nice.",
+  "Recovering… Your diff is longer than your attention span. I'm summarizing.",
+  "Assembling… This message will survive code review. Unlike your last one.",
+  "Translating… Converting 'it compiles so ship it' into corporate-approved language.",
+  "Generating… I've seen your git blame. Some of us are still in therapy.",
+  "Processing… Your code style is best described as 'eclectic'. I'm being kind.",
+  "Working… I asked Copilot for help. It suggested 'Add more comments'. Groundbreaking.",
+  "Almost there… Your code works. I'm not sure why. Neither are you.",
+  "Stand by… Assembling a commit message from your 47 open tabs.",
+  "Hold on… Your code has the confidence of a senior dev and the structure of a junior one.",
+  "Crunching bits… I'm finding nicer words for 'panic fix at 2am'.",
+  "Loading creativity… Your commit message will be in English. Your code? Debatable.",
+  "Thinking… I've analyzed your PR description. 'Updated stuff' was not helpful.",
+  "Brewing… Your code is like modern art: abstract, confusing, and expensive to maintain.",
+  "Please wait… I'm translating your 'quick fix' into something mergeable.",
+  "Waking up… Your codebase and my patience have something in common: both are stretched thin.",
+  "Calculating… The probability that you'll read this message: 23%. I'm still writing it.",
+  "Polishing… This message will outlive the code. The code will be rewritten next Tuesday.",
+  "Generating… Your repo has more branches than a conspiracy theorist's mind map.",
+  "One sec… I'm writing a commit message that won't make your future self cry.",
+  "Assembling… Your code is documented. By 'documented' I mean it has 3-letter variable names.",
+  "Processing… I've seen your staging area. It's ambitious. So is this message.",
+  "Hold tight… Your .env file said 'do not commit'. Someone already did. Twice.",
+  "Working on it… Your code passes all tests. The tests are empty, but still.",
+  "Optimizing… Turning 'idk just try it' into something you can paste into Jira.",
+  "Thinking hard… Your code has edge cases. So does your personality. We adapt.",
+  "Loading… Your commit history reads like a choose-your-own-adventure. None of the choices were good.",
+  "Summoning… I'm 70% AI, 30% caffeinated guesswork. Your commit message reflects both.",
+];
+
+export const getRandomJoke = () => {
+  return jokes[Math.floor(Math.random() * jokes.length)];
+};
