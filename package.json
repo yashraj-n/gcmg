@@ -30,15 +30,14 @@
     "langchain": "^1.2.28",
     "ora": "^9.3.0",
     "prompts": "^2.4.2",
-    "shell-quote": "^1.8.3",
     "simple-git": "^3.32.3",
-    "typescript": "^5.9.3",
     "zod": "^3.25.76"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "devDependencies": {
+    "typescript": "^5.9.3",
     "@types/axios": "^0.14.4",
     "@types/node": "^22.19.1",
     "@types/shell-quote": "^1.7.5",

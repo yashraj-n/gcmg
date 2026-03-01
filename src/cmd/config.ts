@@ -3,6 +3,7 @@ import { PROVIDER_MODELS } from "@/llm/models";
 import { PROVIDERS } from "@/llm/provider";
 import { Config, saveConfig } from "@/misc/config";
 import { handlePromptExit } from "@/misc/utils";
+import chalk from "chalk";
 import ora from "ora";
 import prompts from "prompts";
 
@@ -43,22 +44,27 @@ export async function setupGcmg() {
     modelId = model;
     providerBaseUrl = baseUrl;
   } else {
-    const { model } = await prompts([
-      {
-        type: "autocomplete",
-        name: "model",
-        message: "Select your preferred model",
-        choices: PROVIDER_MODELS[provider].map((m: string) => ({
-          title: m,
-          value: m,
-        })),
-        suggest: async (input, choices) => {
-            return choices.filter(c => c.title.toLowerCase().includes(input.toLowerCase()));
+    const { model } = await prompts(
+      [
+        {
+          type: "autocomplete",
+          name: "model",
+          message: "Select your preferred model",
+          choices: PROVIDER_MODELS[provider].map((m: string) => ({
+            title: m,
+            value: m,
+          })),
+          suggest: async (input, choices) => {
+            return choices.filter((c) =>
+              c.title.toLowerCase().includes(input.toLowerCase()),
+            );
+          },
         },
-      },
-    ], {
+      ],
+      {
         onCancel: handlePromptExit,
-    });
+      },
+    );
     modelId = model;
   }
 
@@ -82,15 +88,17 @@ export async function setupGcmg() {
     await testProvider(config);
     spinner.succeed("Provider tested successfully");
     await saveConfig(config);
-    console.log(`
-   ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓██████████████▓▒░ ░▒▓██████▓▒░  
-  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-  ░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░        
-  ░▒▓█▓▒▒▓███▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒▒▓███▓▒░ 
-  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
-   ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░                                                                          
-      `);
+    console.log(
+      chalk.dim(`                                          
+ ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄      ▄▄▄  ▄▄▄▄▄▄▄  
+███▀▀▀▀▀  ███▀▀▀▀▀ ████▄  ▄████ ███▀▀▀▀▀  
+███       ███      ███▀████▀███ ███       
+███  ███▀ ███      ███  ▀▀  ███ ███  ███▀ 
+▀██████▀  ▀███████ ███      ███ ▀██████▀  
+                                        
+                                          
+    `),
+    );
   } catch (error) {
     spinner.fail("Failed to test provider");
     console.error("Failed to test provider", error);
