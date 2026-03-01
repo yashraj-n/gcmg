@@ -2,7 +2,7 @@
 <img src="assets/gcmg-logo.png" alt="GCMG Logo" height="150">
 <h1>Git Commit Message Generator </h1>
 
-An opinionated commit message generator for git.</b>
+An opinionated commit message generator for git.
 
 [![npm version](https://badge.fury.io/js/gcmg.svg)](https://badge.fury.io/js/gcmg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

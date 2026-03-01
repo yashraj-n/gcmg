@@ -3,7 +3,7 @@ import { getConfig } from "@/misc/config";
 import { GIT_HELP_PROMPT } from "@/misc/prompt";
 import { handlePromptExit } from "@/misc/utils";
 import chalk from "chalk";
-import { HumanMessage, SystemMessage } from "langchain";
+import { AIMessage, HumanMessage, SystemMessage } from "langchain";
 import prompts from "prompts";
 
 export async function queryChat(query: string) {
@@ -20,7 +20,7 @@ export async function queryChat(query: string) {
     console.log(chalk.dim("User: "), query);
     const response = await invokeWithHistory(config, history);
     console.log(chalk.dim("Assistant: "), response.content);
- 
+    history.push(new AIMessage(response.content));
     const { query: newQuery } = await prompts([
       {
         type: "text",
@@ -30,6 +30,7 @@ export async function queryChat(query: string) {
     ], {
         onCancel: handlePromptExit,
     });
+
     history.push(new HumanMessage(newQuery));
     query = newQuery;
   }

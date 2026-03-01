@@ -24,7 +24,6 @@
     "@langchain/core": "^1.1.29",
     "@langchain/google-genai": "^2.1.22",
     "@langchain/openai": "^1.2.11",
-    "@types/prompts": "^2.4.9",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",
     "langchain": "^1.2.28",
@@ -38,9 +37,9 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
+    "@types/prompts": "^2.4.9",
     "@types/axios": "^0.14.4",
     "@types/node": "^22.19.1",
-    "@types/shell-quote": "^1.7.5",
     "axios": "^1.13.6",
     "esbuild": "^0.25.12",
     "langsmith": "^0.5.7",

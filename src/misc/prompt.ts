@@ -4,7 +4,7 @@ export const COMMIT_PROMPT = `Your job is to write a GitHub commit message for t
 
 The commit message should be structured as follows:
 
-<type>[<scope]>: <description>
+<type>(<scope>): <description>
 
 [optional body]
 
