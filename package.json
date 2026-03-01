@@ -14,7 +14,10 @@
   "scripts": {
     "build": "tsx scripts/generate-models.ts && node esbuild.config.js"
   },
-  "repository": "https://github.com/yashraj-n/gcmg/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashraj-n/gcmg.git"
+  },
   "type": "commonjs",
   "peerDependencies": {
     "typescript": "^5.0.0"
