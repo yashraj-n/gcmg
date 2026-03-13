@@ -18,8 +18,14 @@ async function main() {
   const providerSet = new Set(PROVIDERS.map((p) => p.toLowerCase()));
 
   for (const model of openRouterModels) {
-    const [providerRaw, modelId] = model.id.split("/");
-    const provider = providerRaw?.toLowerCase();
+    // eg. openai/gpt-4o:free
+    let [provider, modelId] = model.id.split("/");
+    provider = provider.toLowerCase() ?? "";
+    modelId = modelId.split(":")[0] ?? "";
+
+    if (modelId.includes("image")) {
+      continue;
+    }
 
     if (!providerSet.has(provider) || !modelId) continue;
 

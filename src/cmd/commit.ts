@@ -47,9 +47,14 @@ export async function generateCommitMessage() {
     ]);
 
     if (!confirmAdd) return;
-    await git.add(".");
-    await git.commit(commitMessage.toString(), ".");
-
+    try {
+      await git.add(".");
+      await git.commit(commitMessage.toString(), ".");
+    } catch (error) {
+      console.log(chalk.red(chalk.bold("Error committing changes:"), error));
+      spinner.fail();
+      return;
+    }
     const { confirmPush } = await prompts([
       {
         type: "confirm",
