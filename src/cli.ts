@@ -3,11 +3,9 @@ import { setupGcmg } from "./cmd/config";
 import { ensureConfig } from "./misc/utils";
 import { generateCommitMessage } from "./cmd/commit";
 import { queryChat } from "./cmd/query-chat";
+import pkg from "../package.json";
 
-program
-  .name("gcmg")
-  .description("Generate commit messages based on your changes or query")
-  .version("3.0.0");
+program.name(pkg.name).description(pkg.description).version(pkg.version);
 
 program
   .argument(
@@ -21,7 +19,7 @@ program
     ensureConfig(async () => {
       const query = queryParts?.length ? queryParts.join(" ") : undefined;
       if (query) {
-       await queryChat(query);
+        await queryChat(query);
       } else {
         await generateCommitMessage();
       }
