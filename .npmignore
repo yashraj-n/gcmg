@@ -4,3 +4,8 @@ tsconfig.json
 .gitignore
 assets/
 scripts/
+CHANGELOG.md
+esbuild.config.js
+*.lock
+*.lockb
+.github
