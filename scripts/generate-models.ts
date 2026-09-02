@@ -1,77 +1,21 @@
-import axios from "axios";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PROVIDERS } from "@/llm/provider";
-import { isUselessModelId } from "@/misc/model-status";
-
-type OpenRouterModel = {
-  id: string;
-  created?: number;
-  expiration_date?: string | null;
-};
+import { getLiveProviderModels } from "@/misc/model-status";
 
 const CUSTOM_OPENAI_FALLBACK_MODELS = ["gpt-4o", "gpt-4o-mini"];
 
 async function main() {
-  const response = await axios.get("https://openrouter.ai/api/v1/models", {
-    timeout: 15000,
-    headers: {
-      "User-Agent": "gcmg-generate-models",
-      Accept: "application/json",
-    },
-  });
-  const openRouterModels: OpenRouterModel[] = response.data?.data ?? [];
-
-  const modelsByLower = new Map<string, { id: string; created: number }[]>();
-  const providerSet = new Set(PROVIDERS.map((p) => p.toLowerCase()));
-  const now = Date.now();
-
-  for (const model of openRouterModels) {
-    if (model.expiration_date) {
-      const exp = new Date(model.expiration_date).getTime();
-      if (!Number.isNaN(exp) && exp < now) continue;
-    }
-
-    let [provider, modelId] = model.id.split("/");
-    provider = provider?.toLowerCase() ?? "";
-    modelId = modelId?.split(":")[0] ?? "";
-
-    if (!modelId || isUselessModelId(modelId) || isUselessModelId(model.id)) {
-      continue;
-    }
-
-    if (!providerSet.has(provider) || !modelId) continue;
-
-    const list = modelsByLower.get(provider) ?? [];
-    list.push({ id: modelId.trim(), created: model.created ?? 0 });
-    modelsByLower.set(provider, list);
-  }
-
-  const sortModels = (items?: { id: string; created: number }[]) => {
-    if (!items) return [];
-    const map = new Map<string, number>();
-    for (const item of items) {
-      const existing = map.get(item.id) ?? 0;
-      if (item.created > existing) map.set(item.id, item.created);
-    }
-    return Array.from(map.entries())
-      .sort((a, b) => {
-        if (b[1] !== a[1]) return b[1] - a[1];
-        return a[0].localeCompare(b[0]);
-      })
-      .map(([id]) => id);
-  };
+  const liveModels = await getLiveProviderModels(true);
 
   const providerModels: Record<string, string[]> = {};
   for (const p of PROVIDERS) {
-    const key = p.toLowerCase();
     if (p === "Custom OpenAI Based Provider") {
-      const list = sortModels(modelsByLower.get(key));
-      providerModels[p] = list.length > 0 ? list : CUSTOM_OPENAI_FALLBACK_MODELS;
+      providerModels[p] = CUSTOM_OPENAI_FALLBACK_MODELS;
     } else if (p === "OpenRouter") {
       providerModels[p] = ["openrouter/auto"];
     } else {
-      providerModels[p] = sortModels(modelsByLower.get(key));
+      providerModels[p] = liveModels[p] ?? [];
     }
   }
 
@@ -90,6 +34,7 @@ export const PROVIDER_MODELS: Record<GcmgProviders, string[]> = ${JSON.stringify
     console.log(`  ${k}: ${Array.isArray(v) ? v.length : 0} models`);
   }
 }
+
 main().catch((e) => {
   console.error(e);
   process.exit(1);

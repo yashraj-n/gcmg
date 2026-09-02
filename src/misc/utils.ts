@@ -7,7 +7,6 @@ export async function ensureConfig(callback: () => Promise<void>) {
   if (!config) {
     console.log(chalk.red(chalk.bold("No configuration found, setting up...")));
     await setupGcmg();
-    // Re-read after setup; setup may have failed (bad key, cancel, etc.)
     config = await getConfig();
     if (!config) {
       console.log(
@@ -19,6 +18,22 @@ export async function ensureConfig(callback: () => Promise<void>) {
     }
   }
   await callback();
+}
+
+export function extractMessageContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (part && typeof part === "object" && "text" in part) {
+          return String((part as { text: unknown }).text ?? "");
+        }
+        return "";
+      })
+      .join("");
+  }
+  return content ? String(content) : "";
 }
 
 const jokes = [

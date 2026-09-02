@@ -91,7 +91,6 @@ export async function setupGcmg() {
       modelId = model.trim();
     }
   } else {
-    // Prefer live OpenRouter catalog (cached 24h); fall back to baked-in list
     const liveSpinner = ora("Fetching latest models…").start();
     let modelChoices: string[] = PROVIDER_MODELS[provider] ?? [];
     try {
@@ -174,7 +173,7 @@ export async function setupGcmg() {
     );
   } catch (error) {
     spinner.fail("Failed to test provider");
-    console.error("Failed to test provider", error);
+    console.error(error);
     return;
   }
 }

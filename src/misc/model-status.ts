@@ -1,13 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
-import os from "os";
 import chalk from "chalk";
 import type { Config } from "./config";
 import { getConfigDirectory } from "./config";
 import type { GcmgProviders } from "@/llm/provider";
 
 const CACHE_FILE = "models-cache.json";
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 5_000;
 const NOTIFY_BUDGET_MS = 2_500;
 
@@ -47,10 +46,8 @@ export type ModelCheckResult =
   | { status: "skipped" }
   | { status: "error"; message: string };
 
-/** Keywords that mark models useless for commit messages / git help. */
 const USELESS_KEYWORDS = [
   "image",
-  "vision-preview", // keep real multimodal chat; pure image gens filtered by id patterns below
   "dall-e",
   "dalle",
   "tts",
@@ -69,35 +66,10 @@ const USELESS_KEYWORDS = [
   "audio-only",
 ] as const;
 
-/**
- * Returns true if this model id is not useful for text chat / commit messages.
- */
 export function isUselessModelId(id: string): boolean {
   if (!id || typeof id !== "string") return true;
   const lower = id.toLowerCase();
-
-  // Pure image / media generators
-  if (
-    lower.includes("dall-e") ||
-    lower.includes("dalle") ||
-    lower.includes("imagen") ||
-    lower.includes("sora") ||
-    lower.includes("veo-") ||
-    lower.includes("lyria") ||
-    lower.includes("/image") ||
-    lower.endsWith("-image") ||
-    lower.includes("image-generation")
-  ) {
-    return true;
-  }
-
-  for (const kw of USELESS_KEYWORDS) {
-    // "vision" alone is too aggressive (many chat models support vision)
-    if (kw === "vision-preview") continue;
-    if (lower.includes(kw)) return true;
-  }
-
-  return false;
+  return USELESS_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
 function mapToOpenRouterId(
@@ -110,14 +82,17 @@ function mapToOpenRouterId(
 
   if (provider === "OpenRouter") return trimmed;
   if (provider === "Custom OpenAI Based Provider") return null;
-
   if (trimmed.includes("/")) return trimmed;
 
-  const prefix = provider.toLowerCase();
-  return `${prefix}/${trimmed}`;
+  return `${provider.toLowerCase()}/${trimmed}`;
 }
 
+let memoryCache: ModelsCache | null = null;
+
 async function readCache(): Promise<ModelsCache | null> {
+  if (memoryCache && Date.now() - memoryCache.fetchedAt < CACHE_TTL_MS) {
+    return memoryCache;
+  }
   try {
     const raw = await fs.readFile(
       path.join(getConfigDirectory(), CACHE_FILE),
@@ -131,6 +106,7 @@ async function readCache(): Promise<ModelsCache | null> {
     ) {
       return null;
     }
+    memoryCache = data;
     return data;
   } catch {
     return null;
@@ -138,6 +114,7 @@ async function readCache(): Promise<ModelsCache | null> {
 }
 
 async function writeCache(cache: ModelsCache): Promise<void> {
+  memoryCache = cache;
   try {
     const dir = getConfigDirectory();
     await fs.mkdir(dir, { recursive: true });
@@ -173,14 +150,15 @@ export async function getLiveModels(force = false): Promise<OpenRouterModel[]> {
   const isFresh =
     cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS && !force;
 
-  if (isFresh) return cached!.models;
+  if (isFresh) return cached.models;
 
   try {
     const models = await fetchModelsFromOpenRouter();
     if (models.length > 0) {
       await writeCache({ fetchedAt: Date.now(), models });
+      return models;
     }
-    return models.length > 0 ? models : (cached?.models ?? []);
+    return cached?.models ?? [];
   } catch {
     return cached?.models ?? [];
   }
@@ -211,13 +189,9 @@ export async function checkConfiguredModel(
     const match = models.find((m) => {
       if (!m?.id) return false;
       const mid = m.id.toLowerCase();
-      if (mid === idLower) return true;
-      if (mid === modelLower) return true;
-      if (mid.endsWith(`/${modelLower}`)) return true;
-      // strip :free / :nitro etc. for comparison
+      if (mid === idLower || mid === modelLower || mid.endsWith(`/${modelLower}`)) return true;
       const bare = mid.split(":")[0];
-      if (bare === idLower || bare.endsWith(`/${modelLower}`)) return true;
-      return false;
+      return bare === idLower || bare.endsWith(`/${modelLower}`);
     });
 
     if (!match) {
@@ -252,9 +226,6 @@ export async function checkConfiguredModel(
   }
 }
 
-/**
- * Fallback context window estimation (in tokens) based on model naming patterns.
- */
 export function getFallbackContextLength(modelName: string): number {
   if (!modelName) return 32_768;
   const lower = modelName.toLowerCase();
@@ -265,11 +236,7 @@ export function getFallbackContextLength(modelName: string): number {
     lower.includes("o1") ||
     lower.includes("o3") ||
     lower.includes("o4") ||
-    lower.includes("gpt-5")
-  ) {
-    return 128_000;
-  }
-  if (
+    lower.includes("gpt-5") ||
     lower.includes("llama-3") ||
     lower.includes("qwen") ||
     lower.includes("mistral") ||
@@ -284,10 +251,6 @@ export function getFallbackContextLength(modelName: string): number {
   return 32_768;
 }
 
-/**
- * Automatically calculates the maximum allowed diff characters based on the
- * selected model's context window (from OpenRouter live metadata or provider heuristics).
- */
 export async function getModelDiffLimit(config: Config): Promise<{
   contextTokens: number;
   maxDiffChars: number;
@@ -325,9 +288,7 @@ export async function getModelDiffLimit(config: Config): Promise<{
     // fallback used
   }
 
-  // Reserve ~2,000 tokens for system prompt instructions and LLM response
   const usableTokens = Math.max(1000, Math.floor(contextTokens * 0.85) - 2000);
-  // Code/diffs average ~3.5 chars per token
   const maxDiffChars = Math.floor(usableTokens * 3.5);
 
   return {
@@ -356,11 +317,17 @@ export async function notifyModelStatus(config: Config): Promise<void> {
             `⚠  [${config.provider}] Model "${config.model}" is no longer available.`,
           ),
         );
-        console.log(
-          chalk.dim(
-            `   Checked as ${result.openRouterId}. It may have been renamed or retired.`,
-          ),
-        );
+        if (result.openRouterId && result.openRouterId !== config.model) {
+          console.log(
+            chalk.dim(
+              `   Checked as ${result.openRouterId}. It may have been renamed or retired.`,
+            ),
+          );
+        } else {
+          console.log(
+            chalk.dim(`   It may have been renamed or retired.`),
+          );
+        }
         console.log(
           chalk.dim(
             `   Run ${chalk.bold("gcmg config")} to pick a current model.`,
@@ -399,7 +366,6 @@ export async function getLiveProviderModels(
   for (const m of models) {
     if (!m?.id || isUselessModelId(m.id)) continue;
 
-    // Filter out expired models
     if (m.expiration_date) {
       const exp = new Date(m.expiration_date).getTime();
       if (!Number.isNaN(exp) && exp < now) continue;
@@ -408,7 +374,6 @@ export async function getLiveProviderModels(
     const [provider, ...rest] = m.id.split("/");
     if (!provider || rest.length === 0) continue;
 
-    // strip :free / :nitro / etc.
     const modelId = rest.join("/").split(":")[0]?.trim();
     if (!modelId || isUselessModelId(modelId)) continue;
 
@@ -419,13 +384,11 @@ export async function getLiveProviderModels(
 
   const formatList = (items?: { id: string; created: number }[]) => {
     if (!items || items.length === 0) return [];
-    // Deduplicate by ID preserving the newest timestamp
     const map = new Map<string, number>();
     for (const item of items) {
       const existing = map.get(item.id) ?? 0;
       if (item.created > existing) map.set(item.id, item.created);
     }
-    // Sort by created timestamp descending (newest models first), then alphabetically
     return Array.from(map.entries())
       .sort((a, b) => {
         if (b[1] !== a[1]) return b[1] - a[1];

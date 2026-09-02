@@ -16,6 +16,7 @@ export type GcmgProviders = (typeof PROVIDERS)[number];
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export function getProvider(provider: GcmgProviders, config: Config) {
+  const activeProvider = provider || config.provider;
   const clientConfig = {
     apiKey: config.apiKey,
     model: config.model,
@@ -26,7 +27,7 @@ export function getProvider(provider: GcmgProviders, config: Config) {
     maxRetries: 2,
   };
 
-  switch (config.provider) {
+  switch (activeProvider) {
     case "OpenAI":
       return new ChatOpenAI({
         ...clientConfig,
@@ -47,7 +48,6 @@ export function getProvider(provider: GcmgProviders, config: Config) {
         maxRetries: 2,
         configuration: {
           baseURL: OPENROUTER_BASE_URL,
-          // Optional attribution headers recommended by OpenRouter
           defaultHeaders: {
             "HTTP-Referer": "https://github.com/yashraj-n/gcmg",
             "X-Title": "gcmg",
@@ -59,6 +59,6 @@ export function getProvider(provider: GcmgProviders, config: Config) {
         ...clientConfig,
       });
     default:
-      throw new Error(`Invalid provider: ${provider}`);
+      throw new Error(`Invalid provider: ${activeProvider}`);
   }
 }

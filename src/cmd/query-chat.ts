@@ -2,7 +2,7 @@ import { invokeWithHistory } from "@/llm";
 import { getConfig } from "@/misc/config";
 import { notifyModelStatus } from "@/misc/model-status";
 import { GIT_HELP_PROMPT } from "@/misc/prompt";
-import { handlePromptExit } from "@/misc/utils";
+import { extractMessageContent, handlePromptExit } from "@/misc/utils";
 import chalk from "chalk";
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "langchain";
 import prompts from "prompts";
@@ -34,7 +34,7 @@ export async function queryChat(query: string) {
     console.log(chalk.dim("User: "), currentQuery);
     try {
       const response = await invokeWithHistory(config, history);
-      const content = String(response?.content ?? "").trim() || "(empty reply)";
+      const content = extractMessageContent(response?.content).trim() || "(empty reply)";
       console.log(chalk.dim("Assistant: "), content);
       history.push(new AIMessage(content));
     } catch (error) {

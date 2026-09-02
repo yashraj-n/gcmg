@@ -1,7 +1,7 @@
 import { generateCommitMessageFromDiff } from "@/llm";
 import { getConfig } from "@/misc/config";
 import { getModelDiffLimit, notifyModelStatus } from "@/misc/model-status";
-import { getRandomJoke, handlePromptExit } from "@/misc/utils";
+import { extractMessageContent, getRandomJoke, handlePromptExit } from "@/misc/utils";
 import chalk from "chalk";
 import ora from "ora";
 import simpleGit from "simple-git";
@@ -38,7 +38,6 @@ export async function generateCommitMessage() {
     return;
   }
 
-  // Dynamically calculate model's context window and safe diff limit
   const { maxDiffChars, contextTokens, isCustomOverride } =
     await getModelDiffLimit(config);
 
@@ -65,14 +64,13 @@ export async function generateCommitMessage() {
     console.log(chalk.dim(`Base URL: ${config.extra?.baseUrl ?? "(none)"}`));
   }
 
-  // Hard-capped alert; never blocks longer than ~2.5s
   await notifyModelStatus(config);
 
   const spinner = ora(getRandomJoke()).start();
 
   try {
     const result = await generateCommitMessageFromDiff(config, diff);
-    const commitMessage = String(result?.content ?? "").trim();
+    const commitMessage = extractMessageContent(result?.content).trim();
 
     if (!commitMessage) {
       spinner.fail("Model returned an empty commit message");
