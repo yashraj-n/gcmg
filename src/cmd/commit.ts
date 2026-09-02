@@ -1,6 +1,7 @@
 import { generateCommitMessageFromDiff } from "@/llm";
 import { getConfig } from "@/misc/config";
-import { getRandomJoke } from "@/misc/utils";
+import { getModelDiffLimit, notifyModelStatus } from "@/misc/model-status";
+import { getRandomJoke, handlePromptExit } from "@/misc/utils";
 import chalk from "chalk";
 import ora from "ora";
 import simpleGit from "simple-git";
@@ -9,71 +10,140 @@ import prompts from "prompts";
 const git = simpleGit();
 
 export async function generateCommitMessage() {
-  const diff = await getDiff();
-  if (diff.length === 0) {
+  let diff: string;
+  try {
+    diff = await getDiff();
+  } catch (error) {
+    console.log(
+      chalk.red(
+        chalk.bold("Not a git repository (or git is unavailable)."),
+      ),
+      error instanceof Error ? error.message : error,
+    );
+    return;
+  }
+
+  if (!diff || diff.trim().length === 0) {
     console.log(chalk.red(chalk.bold("No changes to commit")));
     return;
   }
+
   const config = await getConfig();
+  if (!config?.apiKey || !config?.model || !config?.provider) {
+    console.log(
+      chalk.red(
+        chalk.bold("Invalid or missing configuration. Run: gcmg config"),
+      ),
+    );
+    return;
+  }
+
+  // Dynamically calculate model's context window and safe diff limit
+  const { maxDiffChars, contextTokens, isCustomOverride } =
+    await getModelDiffLimit(config);
+
+  const originalLength = diff.length;
+  if (diff.length > maxDiffChars) {
+    const reason = isCustomOverride
+      ? "(via GCMG_MAX_DIFF_CHARS)"
+      : `(~${contextTokens.toLocaleString()} token context limit for ${config.model})`;
+    console.log(
+      chalk.yellow(
+        `Diff is large (${originalLength.toLocaleString()} chars). Truncating to ${maxDiffChars.toLocaleString()} chars ${reason}.`,
+      ),
+    );
+    diff = diff.slice(0, maxDiffChars) + "\n\n… [diff truncated]";
+  }
+
   console.log(
     chalk.dim(`Analyzing ${diff.length.toLocaleString()} characters of diff`),
   );
-  if (config) {
-    console.log(
-      chalk.dim(`Provider: ${config.provider} · Model: ${config.model}`),
-    );
-    if (config.provider === "Custom OpenAI Based Provider") {
-      console.log(chalk.dim(`Base URL: ${config.extra?.baseUrl}`));
-    }
+  console.log(
+    chalk.dim(`Provider: ${config.provider} · Model: ${config.model}`),
+  );
+  if (config.provider === "Custom OpenAI Based Provider") {
+    console.log(chalk.dim(`Base URL: ${config.extra?.baseUrl ?? "(none)"}`));
   }
+
+  // Hard-capped alert; never blocks longer than ~2.5s
+  await notifyModelStatus(config);
+
   const spinner = ora(getRandomJoke()).start();
 
   try {
-    const { content: commitMessage } = await generateCommitMessageFromDiff(
-      config!,
-      diff,
-    );
-    spinner.succeed();
+    const result = await generateCommitMessageFromDiff(config, diff);
+    const commitMessage = String(result?.content ?? "").trim();
 
-    console.log("\n" + chalk.bold(commitMessage));
-
-    const { confirmAdd } = await prompts([
-      {
-        type: "confirm",
-        initial: true,
-        message: "Do you want to add the changes to the staging area?",
-        name: "confirmAdd",
-      },
-    ]);
-
-    if (!confirmAdd) return;
-    try {
-      await git.add(".");
-      await git.commit(commitMessage.toString(), ".");
-    } catch (error) {
-      console.log(chalk.red(chalk.bold("Error committing changes:"), error));
-      spinner.fail();
+    if (!commitMessage) {
+      spinner.fail("Model returned an empty commit message");
       return;
     }
-    const { confirmPush } = await prompts([
-      {
-        type: "confirm",
-        initial: true,
-        message: "Do you want to push the changes to the remote repository?",
-        name: "confirmPush",
-      },
-    ]);
+
+    spinner.succeed();
+    console.log("\n" + chalk.bold(commitMessage));
+
+    const { confirmAdd } = await prompts(
+      [
+        {
+          type: "confirm",
+          initial: true,
+          message: "Do you want to add the changes to the staging area?",
+          name: "confirmAdd",
+        },
+      ],
+      { onCancel: handlePromptExit },
+    );
+
+    if (!confirmAdd) return;
+
+    try {
+      await git.add(".");
+      await git.commit(commitMessage);
+      console.log(chalk.green("Committed changes successfully."));
+    } catch (error) {
+      console.log(chalk.red(chalk.bold("Error committing changes:"), error));
+      return;
+    }
+
+    const { confirmPush } = await prompts(
+      [
+        {
+          type: "confirm",
+          initial: true,
+          message: "Do you want to push the changes to the remote repository?",
+          name: "confirmPush",
+        },
+      ],
+      { onCancel: handlePromptExit },
+    );
     if (!confirmPush) return;
-    await git.push();
+
+    try {
+      await git.push();
+      console.log(chalk.green("Pushed changes successfully."));
+    } catch (error) {
+      console.log(chalk.red(chalk.bold("Error pushing changes:"), error));
+    }
   } catch (error) {
+    spinner.fail();
     console.log(
       chalk.red(chalk.bold("Error generating commit message:"), error),
     );
-    spinner.fail();
-    throw error;
   }
 }
 
-function getDiff() {
-  return git.diff({});
+async function getDiff(): Promise<string> {
+  try {
+    // Staged + unstaged changes vs HEAD
+    return await git.diff(["HEAD"]);
+  } catch {
+    // Fallback if HEAD does not exist yet (e.g. freshly initialized repository)
+    try {
+      const staged = await git.diff(["--cached"]);
+      const unstaged = await git.diff([]);
+      return [staged, unstaged].filter(Boolean).join("\n");
+    } catch {
+      return await git.diff();
+    }
+  }
 }

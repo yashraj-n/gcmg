@@ -3,13 +3,24 @@ import { getConfig } from "./config";
 import chalk from "chalk";
 
 export async function ensureConfig(callback: () => Promise<void>) {
-  const config = await getConfig();
+  let config = await getConfig();
   if (!config) {
     console.log(chalk.red(chalk.bold("No configuration found, setting up...")));
     await setupGcmg();
+    // Re-read after setup; setup may have failed (bad key, cancel, etc.)
+    config = await getConfig();
+    if (!config) {
+      console.log(
+        chalk.red(
+          chalk.bold("Configuration was not saved. Run `gcmg config` and try again."),
+        ),
+      );
+      return;
+    }
   }
   await callback();
 }
+
 const jokes = [
   "Generating your commit message… please enjoy this joke while I pretend to work harder than you do.",
   "Still thinking… If this takes too long, feel free to blame latency, AI, your wifi, Mercury in retrograde, or JavaScript. They're all valid.",
@@ -94,6 +105,7 @@ const jokes = [
 ];
 
 export const getRandomJoke = () => {
+  if (jokes.length === 0) return "Generating commit message…";
   return jokes[Math.floor(Math.random() * jokes.length)];
 };
 
