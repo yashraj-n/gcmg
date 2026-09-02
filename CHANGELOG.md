@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Feature**: Add OpenRouter as a first-class provider with Auto (`openrouter/auto`) and Custom model modes.
-- **Feature**: Live model catalog + deprecation checks. On every run gcmg fetches (or uses a 24 h cache of) the OpenRouter model list and warns in the terminal if the configured model is missing or marked for expiration. `gcmg config` also prefers the live list for autocomplete.
-- **Fix**: Commit message generation now considers both staged and unstaged changes (`git diff HEAD`).
-- **Fix**: Remove incorrect path argument from `git.commit()`.
-- **Fix**: Create config directory before writing `gcmg-config.json` (prevents first-run crash).
-- **Chore**: Improve prompt validation and cancel handling in config wizard. `generate-models.ts` now skips already-expired models.
-- **Hardening**: Skip non-chat models (image/TTS/embedding/video/…). Guard empty config, non-git repos, empty LLM replies, large diffs, cancel mid-setup, push failures. Model alerts capped at 2.5s.
+## [3.1.0] - 2026-09-02
+
+- **Feature**: Add OpenRouter as a first-class provider with Auto (`openrouter/auto`) and custom model modes.
+- **Feature**: Add live model discovery, 24-hour caching, model deprecation checks, and context-aware diff limits.
+- **Fix**: Improve commit diff handling, including staged and unstaged changes and repositories without an initial commit.
+- **Fix**: Create the config directory before writing `gcmg-config.json`.
+- **Fix**: Improve structured LLM response handling, prompt cancellation, configuration validation, and push feedback.
+- **Hardening**: Skip non-chat models and handle empty configuration, non-git repositories, empty responses, large diffs, and push failures.
+- **Chore**: Simplify model generation and status handling, remove redundant code, and remove the obsolete `scripts/test-all.ts` smoke-test script.
 
 ## [3.0.1] - 2026-03-13
 
