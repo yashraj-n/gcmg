@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- _No unreleased changes yet._
+## [3.1.0] - 2026-09-02
+
+- **Feature**: Add OpenRouter as a first-class provider with Auto (`openrouter/auto`) and custom model modes.
+- **Feature**: Add live model discovery, 24-hour caching, model deprecation checks, and context-aware diff limits.
+- **Fix**: Improve commit diff handling, including staged and unstaged changes and repositories without an initial commit.
+- **Fix**: Create the config directory before writing `gcmg-config.json`.
+- **Fix**: Improve structured LLM response handling, prompt cancellation, configuration validation, and push feedback.
+- **Hardening**: Skip non-chat models and handle empty configuration, non-git repositories, empty responses, large diffs, and push failures.
+- **Chore**: Simplify model generation and status handling, remove redundant code, and remove the obsolete `scripts/test-all.ts` smoke-test script.
 
 ## [3.0.1] - 2026-03-13
 

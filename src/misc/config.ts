@@ -7,19 +7,19 @@ import path from "path";
 export const configSchema = z.object({
   version: z.string().default("3.0.0"),
   provider: z.enum(PROVIDERS),
-  apiKey: z.string(),
-  model: z.string(),
-  extra: z.optional(
-    z.object({
-      baseUrl: z.string(),
-    }),
-  ),
+  apiKey: z.string().min(1),
+  model: z.string().min(1),
+  extra: z
+    .object({
+      baseUrl: z.string().min(1),
+    })
+    .optional(),
 });
 
 const configFileName = "gcmg-config.json";
 export type Config = z.infer<typeof configSchema>;
 
-function getConfigDirectory(): string {
+export function getConfigDirectory(): string {
   const homeDir = os.homedir();
   const appName = "gcmg";
 
@@ -38,23 +38,24 @@ function getConfigDirectory(): string {
   }
 }
 
-export async function getConfig(): Promise<z.infer<
-  typeof configSchema
-> | null> {
+export async function getConfig(): Promise<Config | null> {
   const configPath = path.join(getConfigDirectory(), configFileName);
   const config = await fs.readFile(configPath, "utf-8").catch(() => null);
   if (!config) {
     return null;
   }
   try {
-    return configSchema.parse(JSON.parse(config));
-  } catch (error) {
-    console.warn("Failed to parse config file, creating new");
+    const parsed = JSON.parse(config);
+    return configSchema.parse(parsed);
+  } catch {
+    console.warn("Failed to parse config file, treating as missing");
     return null;
   }
 }
 
 export async function saveConfig(config: Config) {
-  const configPath = path.join(getConfigDirectory(), configFileName);
+  const dir = getConfigDirectory();
+  await fs.mkdir(dir, { recursive: true });
+  const configPath = path.join(dir, configFileName);
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 }
