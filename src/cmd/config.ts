@@ -59,7 +59,7 @@ export async function setupGcmg() {
           message: "OpenRouter mode",
           choices: [
             {
-              title: "Auto (openrouter/auto — smart model selection)",
+              title: "Auto (openrouter/auto)",
               value: "auto",
             },
             {
