@@ -5,10 +5,18 @@ import { z } from "zod";
 import path from "path";
 
 export const configSchema = z.object({
-  version: z.string().default("3.0.0"),
+  version: z.string().default("3.1.0"),
   provider: z.enum(PROVIDERS),
   apiKey: z.string().min(1),
   model: z.string().min(1),
+  /** Preferred interactive UI: full-screen OpenTUI or lightweight CLI key-bar. */
+  uiMode: z.enum(["tui", "cli"]).default("tui"),
+  /**
+   * Yolo mode preference. When true, pressing [y] stages every file, commits,
+   * and pushes in one shot without extra confirmation. Toggle with [y] — the
+   * new value is persisted automatically so it carries across sessions.
+   */
+  yolo: z.boolean().default(false),
   extra: z
     .object({
       baseUrl: z.string().min(1),
@@ -38,7 +46,12 @@ export function getConfigDirectory(): string {
   }
 }
 
-export async function getConfig(): Promise<Config | null> {
+let cachedConfig: Config | null = null;
+
+export async function getConfig(forceRefresh = false): Promise<Config | null> {
+  if (cachedConfig && !forceRefresh) {
+    return cachedConfig;
+  }
   const configPath = path.join(getConfigDirectory(), configFileName);
   const config = await fs.readFile(configPath, "utf-8").catch(() => null);
   if (!config) {
@@ -46,7 +59,8 @@ export async function getConfig(): Promise<Config | null> {
   }
   try {
     const parsed = JSON.parse(config);
-    return configSchema.parse(parsed);
+    cachedConfig = configSchema.parse(parsed);
+    return cachedConfig;
   } catch {
     console.warn("Failed to parse config file, treating as missing");
     return null;
@@ -54,6 +68,7 @@ export async function getConfig(): Promise<Config | null> {
 }
 
 export async function saveConfig(config: Config) {
+  cachedConfig = config;
   const dir = getConfigDirectory();
   await fs.mkdir(dir, { recursive: true });
   const configPath = path.join(dir, configFileName);

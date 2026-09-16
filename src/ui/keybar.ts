@@ -1,101 +1,108 @@
 import chalk from "chalk";
 
+import { renderBannerArt } from "@/ui/banner";
+import { getKeyActions } from "@/ui/keymap";
+import { packChips } from "@/ui/buttons";
+
 export interface KeybarState {
   provider: string;
   model: string;
   variantIndex: number;
   variantCount: number;
   stagedOnly: boolean;
-  hasStagedChanges: boolean;
   lastAction?: string;
+  /** When true the [y] chip shows "Yolo ON" in green; off shows dim "Yolo OFF". */
+  yoloEnabled?: boolean;
 }
 
-const WIDTH = 78;
-/** Fixed column width so every row lines up vertically */
-const COL = 26;
-
-function sep(char = "─"): string {
-  return chalk.dim(char.repeat(WIDTH));
+function sep(width = 78, char = "─"): string {
+  return chalk.dim(char.repeat(Math.max(20, width)));
 }
 
-/** One key cell padded to COL so columns align across rows */
-function cell(key: string, label: string, width = COL): string {
-  const content = `[${chalk.bold(key)}] ${label}`;
-  const visible = `[${key}] ${label}`.length;
-  return content + " ".repeat(Math.max(0, width - visible));
+const BUTTON_COLOR = chalk
+  .bgRgb(48, 52, 58)
+  .white
+  .bold;
+
+function chip(key: string, label: string, highlight?: boolean): string {
+  const bg = highlight
+    ? chalk.bgRgb(30, 100, 40).white.bold
+    : BUTTON_COLOR;
+  return `${bg(` ${key} `)} ${highlight ? chalk.greenBright(label) : chalk.white(label)}`;
+}
+
+export function renderBanner(width = 78): string {
+  return renderBannerArt(width) + "\n" + sep(width);
 }
 
 export function renderStatusLine(state: KeybarState): string {
+  const yoloBadge = state.yoloEnabled
+    ? "  " + chalk.bgRgb(30, 100, 40).white.bold(" YOLO ") + chalk.greenBright(" ON")
+    : "";
+
   const left = [
-    chalk.dim("Provider:") + " " + chalk.cyan(state.provider),
-    chalk.dim("Model:") + " " + chalk.cyan(state.model),
-    chalk.dim("Variant:") + " " + chalk.cyan(`${state.variantIndex + 1}/${state.variantCount}`),
+    chalk.dim("Provider:") +
+      " " +
+      chalk.cyan(state.provider),
+
+    chalk.dim("Model:") +
+      " " +
+      chalk.cyan(state.model),
+
+    chalk.dim("Variant:") +
+      " " +
+      chalk.cyan(
+        `${state.variantIndex + 1}/${state.variantCount}`,
+      ),
   ].join(chalk.dim("  ·  "));
 
-  const lines = [" " + left];
+  const lines = [" " + left + yoloBadge];
 
   if (!state.stagedOnly) {
-    lines.push(" " + chalk.yellow("⚠  unstaged preview — press [a] to stage & commit"));
+    lines.push(
+      " " +
+        chalk.yellow(
+          "Unstaged preview — press [a] to stage & commit",
+        ),
+    );
   }
 
   if (state.lastAction) {
-    lines.push(" " + chalk.green("✓  " + state.lastAction));
+    const isError = /fail|error|cancel|discard|unselected|empty/i.test(state.lastAction);
+    const badge = isError
+      ? chalk.bgRed.white.bold("  ✗ ACTION  ")
+      : chalk.bgCyan.black.bold("  ▶ KEY ACTION  ");
+    const msg = isError
+      ? chalk.red.bold(`  ${state.lastAction}`)
+      : chalk.bold.whiteBright(`  ${state.lastAction}`);
+    lines.push("");
+    lines.push(`  ${badge}${msg}`);
+    lines.push("");
   }
 
   return lines.join("\n");
 }
 
-/**
- * Clean table-like bottom key bar with consistent 3-column alignment.
- */
-export function renderKeyBar(state: KeybarState): string {
-  // Row 1 – message actions
-  const row1 = [
-    cell("c", "Copy"),
-    cell("e", "Edit"),
-    cell("r", "Regenerate"),
-  ].join("");
+export function renderKeyBar(
+  state: KeybarState,
+  width = 78,
+): string {
+  const actions = getKeyActions({
+    stagedOnly: state.stagedOnly,
+    yoloEnabled: state.yoloEnabled,
+  });
 
-  // Row 2 – navigation (pad third cell so columns stay aligned)
-  const row2 = [
-    cell("n", "Next variant"),
-    cell("p", "Prev variant"),
-    cell(" ", ""),
-  ].join("");
-
-  // Row 3 – commit actions
-  let row3: string;
-  if (state.stagedOnly) {
-    row3 = [
-      cell("s", "Commit staged"),
-      cell("a", "Stage all + Commit"),
-      cell("u", "Commit + Push"),
-    ].join("");
-  } else {
-    // Keep same 3-column grid; shorten label so it fits COL
-    row3 = [
-      cell("a", "Stage all + Commit"),
-      cell("u", "Stage+Commit+Push"),
-      cell(" ", ""),
-    ].join("");
-  }
-
-  // Row 4 – utility
-  const row4 = [
-    cell("d", "Dry-run"),
-    cell("?", "Help"),
-    cell("q", "Quit"),
-  ].join("");
+  const chips = actions.map((a) =>
+    chip(a.key, a.label, a.key === "y" && state.yoloEnabled),
+  );
+  const body = packChips(chips, width, { indent: 1, gap: 2 });
 
   return [
     "",
-    sep(),
+    sep(width),
     renderStatusLine(state),
-    sep(),
-    " " + row1,
-    " " + row2,
-    " " + row3,
-    " " + row4,
-    sep(),
+    sep(width),
+    ...body,
+    sep(width),
   ].join("\n");
 }

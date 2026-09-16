@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Interactive Full-Screen OpenTUI Mode**: Full-screen alternate terminal UI with flexbox layout, theme detection (OSC 10/11 dark/light palettes), inline message editing (`Ctrl+S` save, `Esc` cancel), and live status notes.
+- **Single-Line Ungrouped Keybar & Footer**: Streamlined keybar in CLI mode and footer chips in TUI mode into a clean, responsive single line without redundant group headers.
+- **Interactive Regeneration with Hints (`r`)**: Prompt for an optional guidance hint before re-querying the model in both TUI and CLI modes.
+- **Interactive File Picker (`f`)**: Keyboard-driven staging checkbox list in both TUI and CLI (`↑`/`↓` / `k`/`j` to navigate, `Space` to toggle, `a` to toggle all, `Enter` to confirm). Staged files are updated, unstaged files are omitted from the diff, and the commit message is automatically regenerated for only the selected changes.
+- **Yolo Mode (`y`, `--yolo`, `gcmg yolo`)**: Fast path that stages all files, generates a commit message, commits, and pushes in one shot. Pressing `y` in CLI or TUI toggles the mode ON/OFF, and persists the setting as a user preference in `gcmg-config.json`.
+- **Automatic Git Repo Initialization Prompt**: When run inside a directory that is not a git repository, `gcmg` now offers to initialize git (`git init`) and start staging files instead of crashing with an error.
+- **Multi-Variant Message Cycling (`n`/`p`)**: Generate and cycle between up to 3 commit message variants on demand.
+- **Secret & Credential Scanner**: Scans diffs for accidentally committed AWS keys, GitHub tokens, OpenAI/Anthropic/Google credentials, and private keys.
+- **Intelligent Diff Noise Filtering**: Automatically drops lockfiles (`bun.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`), build outputs (`dist/`), images, and minified bundles from the diff sent to LLMs.
+- **Cross-Platform Clipboard (`c`)**: Windows `clip.exe` (UTF-16LE), macOS `pbcopy`, Linux `xclip`/`xsel`, and clipboardy fallback.
+- **OpenRouter Dynamic Context Budgeting**: Fetches live context window token limits and truncates oversized diffs at 85% capacity with clear warnings.
+
+### Changed
+- Refactored project architecture into modular subsystems: `src/git/`, `src/llm/`, `src/ui/`, `src/misc/`, and `src/cmd/`.
+- Centralized shared configuration constants in `src/misc/constants.ts` (`MAX_VARIANTS`, `CHARS_PER_TOKEN`, `MIN_USABLE_TOKENS`, and file picker page sizes) to eliminate magic number duplication.
+- Updated configuration wizard (`gcmg config`) to include interactive UI selection (`TUI` vs `CLI`), default Yolo mode preference, and dynamic package versioning from `package.json`.
+- Optimized `getConfig` and `saveConfig` with process-level in-memory caching to prevent redundant disk I/O across sequential command phases.
+
+### Fixed
+- Fixed in-terminal CLI message editor: added dynamic cursor tracking, high-contrast visual block highlighting at the active edit point, full arrow-key multi-line navigation (`↑`/`↓`/`←`/`→`, `Home`, `End`), cursor-aware deletion (`Backspace`/`Delete`), live `[Line/Col]` status, and hardware cursor synchronization.
+- Fixed keypress event listener re-attachment bug in CLI mode that could cause duplicate event processing.
+- Fixed CLI screen padding calculation in `render()` to accurately align the bottom keybar without line overruns.
+- Fixed potential duplicate tracking of renamed files in `src/git/stage.ts`.
+- Fixed `renderHelpOverlay` to accurately display dynamic Yolo mode toggle status.
+- Fixed dead code across the codebase: removed unused `getGroupedKeyActions` in `keymap.ts`, unused `buildChip` in `tui.ts`, unused `groupLabel` in palette, and dead provider fallback in `provider.ts`.
+- Fixed duplicate dynamic imports of `collectDiff` and `filterNoiseFromDiff` in CLI file picker confirmation handler.
+- Fixed TypeScript type error in `scripts/test-openrouter.ts` with updated configuration schema.
+- Fixed diff generation on fresh repositories with zero previous commits using intent-to-add.
+
 ## [3.1.0] - 2026-09-02
 
 - **Feature**: Add OpenRouter as a first-class provider with Auto (`openrouter/auto`) and custom model modes.

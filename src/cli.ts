@@ -14,6 +14,7 @@ program
   )
   .option("-m, --context <text>", "Hint to guide the generated commit message")
   .option("-a, --all", "Diff/stage all changes instead of staged-only")
+  .option("-y, --yolo", "Yolo mode: stage all, commit, and push in one shot")
   .option("-p, --print", "Print the generated message and exit (no prompts)")
   .option("--dry-run", "Alias for --print")
   .description(
@@ -24,6 +25,7 @@ program
     all?: boolean;
     print?: boolean;
     dryRun?: boolean;
+    yolo?: boolean;
   }) => {
     const query = queryParts?.length ? queryParts.join(" ") : undefined;
     await ensureConfig(async () => {
@@ -34,8 +36,23 @@ program
           hint: opts.context,
           all: opts.all,
           print: opts.print || opts.dryRun,
+          yolo: opts.yolo,
         });
       }
+    });
+  });
+
+program
+  .command("yolo")
+  .description("Stage all changes, generate commit message, commit and push immediately")
+  .option("-m, --context <text>", "Hint to guide the generated commit message")
+  .action(async (opts: { context?: string }) => {
+    await ensureConfig(async () => {
+      await generateCommitMessage({
+        hint: opts.context,
+        all: true,
+        yolo: true,
+      });
     });
   });
 

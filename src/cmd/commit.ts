@@ -3,20 +3,24 @@ import chalk from "chalk";
 import ora from "ora";
 
 import { generateCommitMessageFromDiff } from "@/llm";
-import { getConfig } from "@/misc/config";
+import { getConfig, saveConfig } from "@/misc/config";
 import { getModelDiffLimit, notifyModelStatus } from "@/misc/model-status";
 import { extractMessageContent, getRandomJoke } from "@/misc/utils";
 import { filterNoiseFromDiff } from "@/misc/ignore";
 import { scanForSecrets } from "@/misc/secrets";
-import { collectDiff, isGitRepo } from "@/git/diff";
+import { collectDiff, isGitRepo, initGitRepo } from "@/git/diff";
 import { stageAll } from "@/git/stage";
 import { commitStaged } from "@/git/commit";
 import { pushCurrentBranch } from "@/git/push";
 import { renderMessage, renderWarnings } from "@/ui/messageView";
-import { renderKeyBar } from "@/ui/keybar";
+import { renderKeyBar, renderBanner } from "@/ui/keybar";
 import { renderHelpOverlay } from "@/ui/help";
-import { editMessageInEditor } from "@/ui/editor";
+import { showStartupBanner } from "@/ui/banner";
+import { editMessageInTerminal } from "@/ui/editor";
 import { copyToClipboard } from "@/ui/clipboard";
+import { runFilePicker } from "@/ui/filePicker";
+import { runTui, executeTuiAction, type TuiState } from "@/ui/tui";
+import { MAX_VARIANTS } from "@/misc/constants";
 import type { Config } from "@/misc/config";
 
 export interface GenerateCommitMessageOptions {
@@ -26,14 +30,53 @@ export interface GenerateCommitMessageOptions {
   all?: boolean;
   /** `--print` / `--dry-run`: print the message and exit, no prompts. */
   print?: boolean;
+  /** `--yolo`: execute yolo mode (stage all + commit + push) */
+  yolo?: boolean;
 }
 
-const MAX_VARIANTS = 3;
-
 export async function generateCommitMessage(options: GenerateCommitMessageOptions = {}) {
+  // Show the wordmark the instant gcmg is invoked — before any diffing,
+  // config loading, or network calls — so branding isn't tied to the TUI
+  // finishing its first render. No-ops for --print/non-TTY so scripted
+  // consumers never see decorative bytes.
+  if (!options.print) showStartupBanner();
+
+  const isInteractive =
+    Boolean(process.stdin.isTTY) &&
+    Boolean(process.stdout.isTTY) &&
+    !options.print;
+
   if (!(await isGitRepo())) {
-    console.log(chalk.red(chalk.bold("Not a git repository (or git is unavailable).")));
-    return;
+    if (isInteractive) {
+      const { default: prompts } = await import("prompts");
+      const { handlePromptExit } = await import("@/misc/utils");
+      const response = await prompts(
+        [
+          {
+            type: "confirm",
+            name: "init",
+            message: "This directory is not a Git repository. Would you like to initialize git and get started?",
+            initial: true,
+          },
+        ],
+        { onCancel: handlePromptExit },
+      );
+      if (response?.init) {
+        try {
+          await initGitRepo();
+          console.log(chalk.green("Initialized empty Git repository."));
+        } catch (err) {
+          console.log(chalk.red(chalk.bold("Failed to initialize git repository:"), err));
+          return;
+        }
+      } else {
+        console.log(chalk.dim("Aborted."));
+        return;
+      }
+    } else {
+      console.log(chalk.red(chalk.bold("Not a git repository (or git is unavailable). Run 'git init' to get started.")));
+      return;
+    }
   }
 
   const { diff: rawDiff, stagedOnly } = await collectDiff({ all: options.all });
@@ -61,23 +104,64 @@ export async function generateCommitMessage(options: GenerateCommitMessageOption
     const reason = isCustomOverride
       ? "(via GCMG_MAX_DIFF_CHARS)"
       : `(~${contextTokens.toLocaleString()} token context limit for ${config.model})`;
-    console.log(
-      chalk.yellow(
-        `Diff is large (${originalLength.toLocaleString()} chars). Truncating to ${maxDiffChars.toLocaleString()} chars ${reason}.`,
-      ),
-    );
+    // Only log truncation outside TUI; TUI shows status in-panel
     diff = diff.slice(0, maxDiffChars) + "\n\n… [diff truncated]";
+    if ((config.uiMode ?? "tui") !== "tui" || options.print) {
+      console.log(
+        chalk.yellow(
+          `Diff is large (${originalLength.toLocaleString()} chars). Truncating to ${maxDiffChars.toLocaleString()} chars ${reason}.`,
+        ),
+      );
+    }
   }
 
-  console.log(chalk.dim(`Analyzing ${diff.length.toLocaleString()} characters of diff`));
-  console.log(chalk.dim(`Provider: ${config.provider} · Model: ${config.model}`));
-  if (config.provider === "Custom OpenAI Based Provider") {
-    console.log(chalk.dim(`Base URL: ${config.extra?.baseUrl ?? "(none)"}`));
+  const warningLines = buildWarningLines(secretWarnings);
+  const uiMode = config.uiMode ?? "tui";
+
+  // ── TUI path: open UI first, generate inside ──────────────────────────
+  if (isInteractive && uiMode === "tui") {
+    const tuiState: TuiState = {
+      variants: [],
+      index: 0,
+      diff,
+      config,
+      stagedOnly,
+      warningLines,
+      hint: options.hint,
+      yoloEnabled: options.yolo ?? config.yolo ?? false,
+    };
+    try {
+      const { action, state: finalState } = await runTui(tuiState, {
+        generateFirst: true,
+      });
+      if (action) {
+        await executeTuiAction(action, finalState);
+      }
+      // no "Exited without committing" spam — clean return to shell
+    } catch (err) {
+      console.log(
+        chalk.red(
+          "OpenTUI failed to start. Falling back to CLI key-bar.\n" +
+            (err instanceof Error ? err.message : String(err)),
+        ),
+      );
+      // Fall through to generate + CLI below
+      await runCliAfterGenerate(config, diff, stagedOnly, warningLines, options.hint);
+    }
+    return;
   }
-  if (filteredFiles.length > 0) {
-    console.log(
-      chalk.dim(`Filtered ${filteredFiles.length} noisy file(s) from the diff: ${filteredFiles.join(", ")}`),
-    );
+
+  // ── CLI / print path: generate in terminal then show ──────────────────
+  if (!options.print) {
+    console.log(chalk.dim(`Analyzing ${diff.length.toLocaleString()} characters of diff`));
+    console.log(chalk.dim(`Provider: ${config.provider} · Model: ${config.model}`));
+    if (filteredFiles.length > 0) {
+      console.log(
+        chalk.dim(
+          `Filtered ${filteredFiles.length} noisy file(s): ${filteredFiles.join(", ")}`,
+        ),
+      );
+    }
   }
 
   await notifyModelStatus(config);
@@ -85,7 +169,9 @@ export async function generateCommitMessage(options: GenerateCommitMessageOption
   const spinner = ora(getRandomJoke()).start();
   let firstMessage: string;
   try {
-    const result = await generateCommitMessageFromDiff(config, diff, { hint: options.hint });
+    const result = await generateCommitMessageFromDiff(config, diff, {
+      hint: options.hint,
+    });
     firstMessage = extractMessageContent(result?.content).trim();
   } catch (error) {
     spinner.fail();
@@ -98,10 +184,6 @@ export async function generateCommitMessage(options: GenerateCommitMessageOption
     return;
   }
   spinner.succeed();
-
-  const warningLines = buildWarningLines(secretWarnings);
-
-  const isInteractive = Boolean(process.stdin.isTTY) && Boolean(process.stdout.isTTY) && !options.print;
 
   if (!isInteractive) {
     console.log(renderWarnings(warningLines));
@@ -117,6 +199,41 @@ export async function generateCommitMessage(options: GenerateCommitMessageOption
     stagedOnly,
     warningLines,
     hint: options.hint,
+    yoloEnabled: options.yolo ?? config.yolo ?? false,
+  });
+}
+
+async function runCliAfterGenerate(
+  config: Config,
+  diff: string,
+  stagedOnly: boolean,
+  warningLines: string[],
+  hint?: string,
+) {
+  const spinner = ora(getRandomJoke()).start();
+  let firstMessage: string;
+  try {
+    const result = await generateCommitMessageFromDiff(config, diff, { hint });
+    firstMessage = extractMessageContent(result?.content).trim();
+  } catch (error) {
+    spinner.fail();
+    console.log(chalk.red(chalk.bold("Error generating commit message:"), error));
+    return;
+  }
+  if (!firstMessage) {
+    spinner.fail("Model returned an empty commit message");
+    return;
+  }
+  spinner.succeed();
+  await runInteractiveLoop({
+    variants: [firstMessage],
+    index: 0,
+    diff,
+    config,
+    stagedOnly,
+    warningLines,
+    hint,
+    yoloEnabled: config.yolo ?? false,
   });
 }
 
@@ -139,6 +256,8 @@ interface LoopState {
   busy?: boolean;
   lastAction?: string;
   showHelp?: boolean;
+  /** Mirrors config.yolo — toggled with y key, persisted on change. */
+  yoloEnabled: boolean;
 }
 
 async function runInteractiveLoop(state: LoopState): Promise<void> {
@@ -160,15 +279,12 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
     };
 
     const resumeInput = () => {
+      process.stdin.removeListener("keypress", onKeypress);
       readline.emitKeypressEvents(process.stdin);
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
       process.stdin.resume();
       process.stdin.on("keypress", onKeypress);
     };
-
-    readline.emitKeypressEvents(process.stdin);
-    if (process.stdin.isTTY) process.stdin.setRawMode(true);
-    process.stdin.resume();
 
     async function onKeypress(
       str: string,
@@ -191,16 +307,21 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
         return;
       }
 
+      if ((key?.name === "return" || key?.name === "enter" || k === "return" || k === "enter") && state.yoloEnabled) {
+        await doStageAllAndCommit(state, { push: true });
+        finish();
+        return;
+      }
+
       switch (k) {
         case "q":
           console.log(chalk.dim("\nExiting without committing."));
           finish();
           return;
-        case "?":
-        case "h": // allow h as help alias
+        case "h":
           state.showHelp = true;
           console.clear();
-          console.log(renderHelpOverlay());
+          console.log(renderHelpOverlay({ stagedOnly: state.stagedOnly }));
           return;
         case "c": {
           state.lastAction = "Copying…";
@@ -216,7 +337,7 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
           state.busy = true;
           teardown();
           try {
-            const edited = await editMessageInEditor(state.variants[state.index] ?? "");
+            const edited = await editMessageInTerminal(state.variants[state.index] ?? "");
             if (edited !== null && edited.length > 0) {
               state.variants[state.index] = edited;
               state.lastAction = "Message updated.";
@@ -232,8 +353,26 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
           return;
         }
         case "r": {
-          // Prefer adding a new variant so the counter goes up (1/1 → 2/2).
-          // Only replace in-place when already at MAX_VARIANTS.
+          state.busy = true;
+          teardown();
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          const hint = await new Promise<string>((resolve) => {
+            rl.question(
+              chalk.cyan("\nEnter hint for commit message (Enter to regenerate on its own): "),
+              (answer) => {
+                rl.close();
+                resolve(answer.trim());
+              },
+            );
+          });
+          if (hint) {
+            state.hint = hint;
+            state.lastAction = `Hint set: "${hint}"`;
+          }
+          resumeInput();
           const atMax = state.variants.length >= MAX_VARIANTS;
           await regenerate(state, { replaceCurrent: atMax });
           render(state);
@@ -284,6 +423,60 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
           finish();
           return;
         }
+        case "y": {
+          // Toggle yolo preference, invert state and persist
+          state.yoloEnabled = !state.yoloEnabled;
+          state.config.yolo = state.yoloEnabled;
+          await saveConfig(state.config).catch(() => undefined);
+          state.lastAction = state.yoloEnabled
+            ? "Yolo mode ON (saved) — press [Enter] to stage all, commit & push (or [y] to turn off)."
+            : "Yolo mode OFF (saved).";
+          render(state);
+          return;
+        }
+        case "f": {
+          // Open file picker, then refresh staged status and regenerate message for selected files
+          state.busy = true;
+          teardown();
+          const result = await runFilePicker();
+          state.busy = false;
+          resumeInput();
+          if (result.applied) {
+            const { diff: newRawDiff, stagedOnly: newStaged } = await collectDiff({
+              all: false,
+              stagedOnly: true,
+              paths: result.selectedPaths,
+            });
+
+            if (result.selectedPaths.length === 0 || !newRawDiff || newRawDiff.trim().length === 0) {
+              state.diff = "";
+              state.stagedOnly = false;
+              state.variants = ["(No files selected — press [f] to select files or [a] to stage all)"];
+              state.index = 0;
+              state.lastAction = "All files unselected — nothing staged.";
+              render(state);
+              return;
+            }
+
+            const { diff: filteredDiff } = await filterNoiseFromDiff(newRawDiff);
+            state.diff = filteredDiff.trim().length > 0 ? filteredDiff : newRawDiff;
+            state.stagedOnly = newStaged;
+            state.lastAction = `Selected ${result.stagedCount} file(s) — writing commit message…`;
+
+            // Immediately clear the previous message so it disappears from the screen!
+            state.variants = ["Analyzing selected files and generating new commit message..."];
+            state.index = 0;
+            state.busy = true;
+            render(state);
+
+            await regenerate(state, { replaceCurrent: true });
+            state.busy = false;
+          } else {
+            state.lastAction = "File picker cancelled.";
+          }
+          render(state);
+          return;
+        }
         case "d": {
           // Dry-run: print message clearly, then exit
           console.clear();
@@ -299,7 +492,7 @@ async function runInteractiveLoop(state: LoopState): Promise<void> {
       }
     }
 
-    process.stdin.on("keypress", onKeypress);
+    resumeInput();
   });
 }
 
@@ -378,26 +571,36 @@ async function doPush() {
 function render(state: LoopState) {
   console.clear();
 
+  const cols = process.stdout.columns ?? 78;
+  const banner = renderBanner(cols);
   const warnings = renderWarnings(state.warningLines);
   const message = renderMessage(state.variants[state.index] ?? "");
-  const keybar = renderKeyBar({
-    provider: state.config.provider,
-    model: state.config.model,
-    variantIndex: state.index,
-    variantCount: state.variants.length,
-    stagedOnly: state.stagedOnly,
-    hasStagedChanges: state.stagedOnly,
-    lastAction: state.lastAction,
-  });
+  const keybar = renderKeyBar(
+    {
+      provider: state.config.provider,
+      model: state.config.model,
+      variantIndex: state.index,
+      variantCount: state.variants.length,
+      stagedOnly: state.stagedOnly,
+      lastAction: state.lastAction,
+      yoloEnabled: state.yoloEnabled,
+    },
+    cols,
+  );
 
-  // Push the key bar toward the bottom of the terminal (vim-style).
+  // Banner always at top; key bar pushed toward bottom.
   const termRows = process.stdout.rows ?? 24;
-  const contentLines = (warnings + message).split("\n").length;
-  const keybarLines = keybar.split("\n").length;
-  const pad = Math.max(0, termRows - contentLines - keybarLines - 1);
+  const parts: string[] = [banner];
+  if (warnings) parts.push(warnings);
+  parts.push(message);
 
-  if (warnings) console.log(warnings);
-  console.log(message);
+  const contentLines = parts.reduce((sum, p) => sum + p.split("\n").length, 0);
+  const keybarLines = keybar.split("\n").length;
+  const pad = Math.max(0, termRows - contentLines - keybarLines);
+
+  for (const p of parts) {
+    console.log(p);
+  }
   if (pad > 0) console.log("\n".repeat(pad - 1));
   console.log(keybar);
 }

@@ -7,10 +7,9 @@ export interface PushResult {
 }
 
 /**
- * Pushes the current branch, setting the upstream automatically on the
- * first push of a new branch. Full smart-push behaviour (force-push guard,
- * richer error handling) lands in a later phase — this covers the common
- * case needed by the `u` (commit + push) key.
+ * Pushes the current branch to origin. On the first push of a new branch
+ * (no upstream tracking configured), automatically sets upstream with
+ * `-u origin <branch>` so subsequent `git push` calls work without flags.
  */
 export async function pushCurrentBranch(): Promise<PushResult> {
   const status = await git.status();

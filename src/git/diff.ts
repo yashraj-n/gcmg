@@ -17,28 +17,50 @@ export async function isGitRepo(): Promise<boolean> {
   }
 }
 
-export async function getStagedDiff(): Promise<string> {
+export async function initGitRepo(): Promise<void> {
+  await git.init();
+}
+
+export async function getStagedDiff(paths?: string[]): Promise<string> {
   try {
-    return await git.diff(["--cached"]);
+    const args = ["--cached"];
+    if (paths && paths.length > 0) {
+      args.push("--", ...paths);
+    }
+    return await git.diff(args);
   } catch {
     return "";
   }
 }
 
-export async function getWorkingDiff(): Promise<string> {
+export async function getWorkingDiff(paths?: string[]): Promise<string> {
   try {
-    return await git.diff([]);
+    const args: string[] = [];
+    if (paths && paths.length > 0) {
+      args.push("--", ...paths);
+    }
+    return await git.diff(args);
   } catch {
     return "";
   }
 }
 
-export async function getFullDiff(): Promise<string> {
+export async function getFullDiff(paths?: string[]): Promise<string> {
   try {
-    return await git.diff(["HEAD"]);
+    const args = ["HEAD"];
+    if (paths && paths.length > 0) {
+      args.push("--", ...paths);
+    }
+    return await git.diff(args);
   } catch {
-    const staged = await getStagedDiff();
-    const working = await getWorkingDiff();
+    // If repository has no commits yet (fresh repo), register untracked files with intent-to-add
+    try {
+      await git.raw(["add", "-N", "--all"]);
+    } catch {
+      // ignore if add -N is unavailable
+    }
+    const staged = await getStagedDiff(paths);
+    const working = await getWorkingDiff(paths);
     return [staged, working].filter(Boolean).join("\n");
   }
 }
@@ -49,17 +71,21 @@ export async function getFullDiff(): Promise<string> {
  * false, so callers should require an explicit "stage all" action before
  * committing anything.
  */
-export async function collectDiff(options: { all?: boolean } = {}): Promise<DiffResult> {
+export async function collectDiff(options: { all?: boolean; stagedOnly?: boolean; paths?: string[] } = {}): Promise<DiffResult> {
   if (options.all) {
-    return { diff: await getFullDiff(), stagedOnly: false };
+    return { diff: await getFullDiff(options.paths), stagedOnly: false };
   }
 
-  const staged = await getStagedDiff();
+  const staged = await getStagedDiff(options.paths);
+  if (options.stagedOnly) {
+    return { diff: staged, stagedOnly: true };
+  }
+
   if (staged && staged.trim().length > 0) {
     return { diff: staged, stagedOnly: true };
   }
 
-  const full = await getFullDiff();
+  const full = await getFullDiff(options.paths);
   return { diff: full, stagedOnly: false };
 }
 

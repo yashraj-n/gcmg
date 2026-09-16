@@ -25,17 +25,21 @@ async function main() {
   );
 
   const autoConfig: Config = {
-    version: "3.0.0",
+    version: "3.1.0",
     provider: "OpenRouter",
     apiKey: "sk-or-v1-test-dummy",
     model: "openrouter/auto",
+    uiMode: "tui",
+    yolo: false,
   };
 
   const customConfig: Config = {
-    version: "3.0.0",
+    version: "3.1.0",
     provider: "OpenRouter",
     apiKey: "sk-or-v1-test-dummy",
     model: "anthropic/claude-sonnet-4",
+    uiMode: "tui",
+    yolo: false,
   };
 
   const autoProvider = getProvider("OpenRouter", autoConfig);

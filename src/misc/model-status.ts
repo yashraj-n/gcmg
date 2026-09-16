@@ -4,6 +4,7 @@ import chalk from "chalk";
 import type { Config } from "./config";
 import { getConfigDirectory } from "./config";
 import type { GcmgProviders } from "@/llm/provider";
+import { CHARS_PER_TOKEN, MIN_USABLE_TOKENS } from "@/misc/constants";
 
 const CACHE_FILE = "models-cache.json";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -260,7 +261,7 @@ export async function getModelDiffLimit(config: Config): Promise<{
     const parsed = Number.parseInt(process.env.GCMG_MAX_DIFF_CHARS, 10);
     if (Number.isFinite(parsed) && parsed > 0) {
       return {
-        contextTokens: Math.floor(parsed / 3.5),
+        contextTokens: Math.floor(parsed / CHARS_PER_TOKEN),
         maxDiffChars: parsed,
         isCustomOverride: true,
       };
@@ -288,8 +289,8 @@ export async function getModelDiffLimit(config: Config): Promise<{
     // fallback used
   }
 
-  const usableTokens = Math.max(1000, Math.floor(contextTokens * 0.85) - 2000);
-  const maxDiffChars = Math.floor(usableTokens * 3.5);
+  const usableTokens = Math.max(MIN_USABLE_TOKENS, Math.floor(contextTokens * 0.85) - 2000);
+  const maxDiffChars = Math.floor(usableTokens * CHARS_PER_TOKEN);
 
   return {
     contextTokens,
@@ -402,8 +403,11 @@ export async function getLiveProviderModels(
     Anthropic: formatList(byProvider["anthropic"]),
     Google: formatList(byProvider["google"]),
     OpenRouter: [
+      "openrouter/free",
       "openrouter/auto",
-      ...formatList(byProvider["openrouter"]).filter((id) => id !== "auto"),
+      ...formatList(byProvider["openrouter"]).filter(
+        (id) => id !== "auto" && id !== "free",
+      ),
     ],
   };
 }
